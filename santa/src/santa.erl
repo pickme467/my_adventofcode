@@ -181,16 +181,16 @@ pair_more_than_once(Word) ->
 pair_more_than_once([], _AnyPrevious, _Any) ->
   false;
 pair_more_than_once([A, A | Tail], PreviousDouble, FoundPairs) ->
-  case lists:member([A, A], FoundPairs) of
+  case lists:member([A, A], PreviousDouble) of
     true ->
-      case lists:member([A, A], PreviousDouble) of
-        false ->
-          true;
-        true ->
-          pair_more_than_once([A | Tail], [], FoundPairs)
-      end;
+      pair_more_than_once([A | Tail], [], FoundPairs);
     false ->
-      pair_more_than_once([A | Tail], [[A, A]], FoundPairs ++ [[A, A]])
+      case lists:member([A, A], FoundPairs) of
+        true ->
+          true;
+        false ->
+          pair_more_than_once([A | Tail], [[A, A]], FoundPairs ++ [[A, A]])
+      end
   end;
 pair_more_than_once([A, B | Tail], _Any, FoundPairs) ->
   case lists:member([A, B], FoundPairs) of
