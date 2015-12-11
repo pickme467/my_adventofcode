@@ -303,7 +303,7 @@ day_7a() ->
 
 day_7a([], Map) ->
   Key = "a",
-  {Value, _NewMap} = execute_operation(Key, maps:get(Key, Map), Map),
+  {Value, _NewMap} = execute_operation_for_key(Key, Map),
   Value;
 day_7a([Command | Tail], Map) ->
   Wire = get_wire(Command),
@@ -356,6 +356,9 @@ my_shiftr(A, B) ->
 my_shiftl(A, B) ->
   A bsl B.
 
+execute_operation_for_key(Key, Map) ->
+    execute_operation(Key, maps:get(Key, Map), Map).
+
 execute_operation(Key, {Operation, [Param]}, Map) when is_integer(Param) ->
   Value = Operation(Param),
   {Value, map:put(Key, Value, Map)};
@@ -364,20 +367,20 @@ execute_operation(Key, {Operation, [X, Y]}, Map) when is_integer(X),
   Value = Operation(X, Y),
   {Value, map:put(Key, Value, Map)};
 execute_operation(Key, {Operation, [Param]}, Map) ->
-  {NewParam, NewMap} = execute_operation(Param, maps:get(Param, Map), Map),
+  {NewParam, NewMap} = execute_operation_for_key(Param, Map),
   Value = Operation(NewParam),
   {Value, maps:put(Key, Value, NewMap)};
 execute_operation(Key, {Operation, [X, Y]}, Map) when is_integer(X) ->
-  {NewY, NewMap} = execute_operation(Y, maps:get(Y, Map), Map),
+  {NewY, NewMap} = execute_operation_for_key(Y, Map),
   Value = Operation(X, NewY),
   {Value, maps:put(Key, Value, NewMap)};
 execute_operation(Key, {Operation, [X, Y]}, Map) when is_integer(Y) ->
-  {NewX, NewMap} = execute_operation(X, maps:get(X, Map), Map),
+  {NewX, NewMap} = execute_operation_for_key(X, Map),
   Value = Operation(NewX, Y),
   {Value, maps:put(Key, Value, NewMap)};
 execute_operation(Key, {Operation, [X, Y]}, Map) ->
-  {NewX, NewMapX} = execute_operation(X, maps:get(X, Map), Map),
-  {NewY, NewMapY} = execute_operation(Y, maps:get(Y, Map), NewMapX),
+  {NewX, NewMapX} = execute_operation_for_key(X, Map),
+  {NewY, NewMapY} = execute_operation_for_key(Y, NewMapX),
   Value = Operation(NewX, NewY),
   {Value, maps:put(Key, Value, NewMapY)};
 execute_operation(_Key, Value, Map) when is_integer(Value) ->
