@@ -1,0 +1,24 @@
+timer:tc(santa, day_1a,  []). -> {       92,138}
+timer:tc(santa, day_1b,  []). -> {       90,1771}
+timer:tc(santa, day_2a,  []). -> {      785,1588178}
+timer:tc(santa, day_2b,  []). -> {      640,3783758}
+timer:tc(santa, day_3a,  []). -> {   131126,2592}
+timer:tc(santa, day_3b,  []). -> {   113020,2360}
+timer:tc(santa, day_4a,  []). -> {   852646,282749}
+timer:tc(santa, day_4b,  []). -> { 30803012,9962624}
+timer:tc(santa, day_5a,  []). -> {     2056,255}
+timer:tc(santa, day_5b,  []). -> {     3358,55}
+timer:tc(santa, day_6a,  []). -> {232122919,543903}
+timer:tc(santa, day_6b,  []). -> { 89595543,14687245}
+timer:tc(santa, day_7a,  []). -> {     1290,956}
+timer:tc(santa, day_7b,  []). -> {      901,40149}
+timer:tc(santa, day_8a,  []). -> {      106,1350}
+timer:tc(santa, day_8b,  []). -> {      120,2085}
+timer:tc(santa, day_9a,  []). -> {   270005,207}
+timer:tc(santa, day_9b,  []). -> {   268088,804}
+timer:tc(santa, day_10a, []). -> {  1833032,329356}
+timer:tc(santa, day_10b, []). -> { 26918876,4666278}
+timer:tc(santa, day_11a, []). -> {    75531,"vzbxxyzz"}
+timer:tc(santa, day_11b, []). -> {   307978,"vzcaabcc"}
+timer:tc(santa, day_12a, []). -> {     1849,191164}
+timer:tc(santa, day_12b, []). -> {    10129,87842}
