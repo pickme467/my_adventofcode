@@ -22,3 +22,5 @@ timer:tc(santa, day_11a, []). -> {    75531,"vzbxxyzz"}
 timer:tc(santa, day_11b, []). -> {   307978,"vzcaabcc"}
 timer:tc(santa, day_12a, []). -> {     1849,191164}
 timer:tc(santa, day_12b, []). -> {    10129,87842}
+timer:tc(santa, day_13a, []). -> {   122896,709}
+timer:tc(santa, day_13b, []). -> {  1270446,668}
