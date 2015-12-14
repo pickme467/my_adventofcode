@@ -823,7 +823,6 @@ update_score(Reineers) ->
                 Reineers)),
   Winners.
 
-
 add_point_to_winners(Reineers) ->
   [{Distance, _Score, _Step, _Action, _Reineer} = First | Rest] =
     lists:reverse(lists:sort(Reineers)),
