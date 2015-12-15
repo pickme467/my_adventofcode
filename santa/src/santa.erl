@@ -869,12 +869,8 @@ find_best_cookie(List, EvaluationFunction) ->
 find_best_recipe(Recipe, Evaluation) ->
   Multipiers = get_spoon_sets(length(Recipe)),
   lists:max(lists:map(fun (MultiplierList) ->
-                          traverse_recipes(MultiplierList, Recipe,
-                                           #{capacity => 0,
-                                             durability => 0,
-                                             flavor => 0,
-                                             texture => 0,
-                                             calories => 0}, Evaluation)
+                          Evaluation(traverse_recipes(MultiplierList, Recipe,
+                                                      maps:new()))
                       end, Multipiers)).
 
 get_spoon_sets(N) ->
@@ -889,24 +885,24 @@ get_multipliers(Higher, N, MaxN) ->
               T <- get_multipliers(L + Higher, N - 1, MaxN),
               lists:sum([L | T]) == 100 - Higher].
 
-traverse_recipes([], [], Result, Evaluation) ->
-  Evaluation(Result);
+traverse_recipes([], [], Result) ->
+  Result;
 traverse_recipes([Number | TailNumbers],
-                 [{_Name, Values} | TailRecipies],
-                 RecipeScore, Evaluation) ->
+                 [{_Name, Values} | TailRecipies], RecipeScore) ->
   traverse_recipes(TailNumbers, TailRecipies,
                    lists:foldl(fun (Key, Map) ->
                                    maps:put(Key,
                                             Number * maps:get(Key, Values)
                                             + maps:get(Key, Map, 0), Map)
-                               end, RecipeScore, maps:keys(RecipeScore)),
-                   Evaluation).
+                               end, RecipeScore, maps:keys(Values))).
 
 highest_score(Result) ->
   case  is_non_negative(Result) of
     false -> 0;
     true ->
-      score_recipe(Result)
+      lists:foldl(fun (calories, Value) -> Value;
+                      (Key, Value) ->
+                      Value * maps:get(Key, Result) end, 1, maps:keys(Result))
   end.
 
 is_non_negative(Result) ->
@@ -914,20 +910,14 @@ is_non_negative(Result) ->
                   Value and (maps:get(Key, Result) > 0) end,
               true, maps:keys(Result)).
 
-score_recipe(Result) ->
-  lists:foldl(fun (calories, Value) -> Value;
-                  (Key, Value) ->
-                  Value * maps:get(Key, Result) end, 1, maps:keys(Result)).
-
 day_15b() ->
   find_best_cookie(score_all_recipies(), fun highest_score_500_calories/1).
 
 highest_score_500_calories(Result) ->
-  Ha500Calories = maps:get(calories, Result) == 500,
-  case  is_non_negative(Result) andalso Ha500Calories of
+  case maps:get(calories, Result) == 500 of
     false -> 0;
     true ->
-      score_recipe(Result)
+      highest_score(Result)
   end.
 
 day_1_input() ->
