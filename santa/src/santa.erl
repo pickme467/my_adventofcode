@@ -863,7 +863,8 @@ combine(K, [H|T]) ->
 
 find_best_cookie(List, EvaluationFunction) ->
   lists:max(lists:map(fun(Recipe) ->
-                          find_best_recipe(Recipe, EvaluationFunction) end, List)).
+                          find_best_recipe(Recipe, EvaluationFunction)
+                      end, List)).
 
 find_best_recipe(Recipe, Evaluation) ->
   Multipiers = get_spoon_sets(length(Recipe)),
