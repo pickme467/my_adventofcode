@@ -27,7 +27,9 @@
          day_13a/0,
          day_13b/0,
          day_14a/0,
-         day_14b/0]).
+         day_14b/0,
+         day_15a/0,
+         day_15b/0]).
 
 day_1a() ->
   day_1a(day_1_input(), 0).
@@ -276,8 +278,8 @@ get_set({X1, Y1}, {X2, Y2}) ->
 
 day_6b() ->
   lists:sum(array:to_list(day_6b(string:tokens(day_6_input(), "\n"),
-                                array:new([{size, 1000000},
-                                           {default, 0}])))).
+                                 array:new([{size, 1000000},
+                                            {default, 0}])))).
 
 day_6b([], Array) ->
   Array;
@@ -362,7 +364,7 @@ my_shiftl(A, B) ->
   A bsl B.
 
 execute_operation_for_key(Key, Map) ->
-    execute_operation(Key, maps:get(Key, Map), Map).
+  execute_operation(Key, maps:get(Key, Map), Map).
 
 execute_operation(Key, {Operation, [Param]}, Map) when is_integer(Param) ->
   Value = Operation(Param),
@@ -502,7 +504,7 @@ find_routes_from(Visited, Remaining, [NextAllowed | Tail], Map, FoundRoutes) ->
                                     get_allowed_next(NextAllowed,
                                                      Remaining, Map, []),
                                     Map, FoundRoutes),
-    find_routes_from(Visited, Remaining, Tail, Map, FoundNewRoutes).
+  find_routes_from(Visited, Remaining, Tail, Map, FoundNewRoutes).
 
 get_allowed_next(_From, [], _Map, Allowed) ->
   Allowed;
@@ -533,7 +535,7 @@ find_maximum(List, Map) ->
   find_extremum(List, Map, fun max/2, 0).
 
 day_10a() ->
-   length(make_it(40, day_10_input())).
+  length(make_it(40, day_10_input())).
 
 make_it(Times, Input) ->
   lists:foldl(fun(_Times, String) ->
@@ -565,7 +567,7 @@ update_output(Output, [Value | Tail] = Sequence, Map) ->
   {[GeneratedSequence | Output], maps:put(Sequence, GeneratedSequence, Map)}.
 
 day_10b() ->
-   length(make_it(50, day_10_input())).
+  length(make_it(50, day_10_input())).
 
 day_11a() ->
   lists:reverse(find_new_password(lists:reverse(day_11_input()))).
@@ -694,10 +696,10 @@ day_13a() ->
 day_13a([], GuestsMap) ->
   GuestsMap;
 day_13a([Statement | Tail], GuestsMap) ->
-[Who, _Would, GainOrLose, Points, _Happiness, _Units,
- _By, _Sitting, _Next, _To, Whom] = string:tokens(Statement, " ."),
-day_13a(Tail, add_to_guests_list(Who, Whom,
-                                 GainOrLose, Points, GuestsMap)).
+  [Who, _Would, GainOrLose, Points, _Happiness, _Units,
+   _By, _Sitting, _Next, _To, Whom] = string:tokens(Statement, " ."),
+  day_13a(Tail, add_to_guests_list(Who, Whom,
+                                   GainOrLose, Points, GuestsMap)).
 
 add_to_guests_list(Who, Whom, GainOrLose, Points, GuestsMap) ->
   Preferences = case maps:is_key(Who, GuestsMap) of
@@ -759,26 +761,23 @@ add_others_to_his_map(Score, Others) ->
               maps:new(), Others).
 
 day_14a() ->
-  Reineers = make_reineers(),
-
   lists:max(lists:map(
               fun ({_Name, Speed, RunTime, RestTime}) ->
                   get_distance(2503, run, Speed, RunTime, RestTime, 0)
-              end, Reineers)).
+              end, make_reineers())).
 
 make_reineers() ->
-    lists:map(fun (Reineer) ->
-                  [Name, _Can, _Fly, Distance,
-                   _Kmh, _For, Seconds, _Seconds,
-                   _But, _Then, _Must, _Rest, _For,
-                   RestTime, _SecondsWithDot] =
-                    string:tokens(Reineer, " "),
-                  {Name,
-                   list_to_integer(Distance),
-                   list_to_integer(Seconds),
-                   list_to_integer(RestTime)}
-              end,
-              string:tokens(day_14_input(), "\n")).
+  lists:map(fun (Reineer) ->
+                [Name, _Can, _Fly, Distance,
+                 _Kmh, _For, Seconds, _Seconds,
+                 _But, _Then, _Must, _Rest, _For,
+                 RestTime, _SecondsWithDot] =
+                  string:tokens(Reineer, " "),
+                {Name,
+                 list_to_integer(Distance),
+                 list_to_integer(Seconds),
+                 list_to_integer(RestTime)}
+            end, string:tokens(day_14_input(), "\n")).
 
 get_distance(RemainingTime, stop, _Speed, _RunTime, RestTime, Distance) when
     RemainingTime =< RestTime -> Distance;
@@ -794,8 +793,8 @@ get_distance(RemainingTime, run, Speed, RunTime, RestTime, Distance) ->
 
 day_14b() ->
   handle_race(2503, lists:map(fun (Reineer) ->
-                {0, 0, 1, run, Reineer}
-                  end, make_reineers())).
+                                  {0, 0, 1, run, Reineer}
+                              end, make_reineers())).
 
 handle_race(0, Reineers) ->
   lists:max(lists:map(fun ({_Distance, Score,
@@ -806,22 +805,21 @@ handle_race(Counter, Reineers) ->
   handle_race(Counter - 1, update_score(Reineers)).
 
 update_score(Reineers) ->
-  Winners = add_point_to_winners(
-              lists:map(
-                fun ({CurrentDistance, Score, Step, run,
-                      {_Name, Distance, Step, _RestTime} = Reineer}) ->
-                    {CurrentDistance + Distance, Score, 1, stop, Reineer};
-                    ({CurrentDistance, Score, Step, run,
-                      {_Name, Distance, _RunTime, _RestTime} = Reineer}) ->
-                    {CurrentDistance + Distance, Score, Step + 1, run, Reineer};
-                    ({CurrentDistance, Score, Step, stop,
-                      {_Name, _Distance, _RunTime, Step} = Reineer}) ->
-                    {CurrentDistance, Score, 1, run, Reineer};
-                    ({CurrentDistance, Score, Step, stop,
-                      {_Name, _Distance, _RunTime, _RestTime} = Reineer}) ->
-                    {CurrentDistance, Score, Step + 1, stop, Reineer} end,
-                Reineers)),
-  Winners.
+  add_point_to_winners(
+    lists:map(
+      fun ({CurrentDistance, Score, Step, run,
+            {_Name, Distance, Step, _RestTime} = Reineer}) ->
+          {CurrentDistance + Distance, Score, 1, stop, Reineer};
+          ({CurrentDistance, Score, Step, run,
+            {_Name, Distance, _RunTime, _RestTime} = Reineer}) ->
+          {CurrentDistance + Distance, Score, Step + 1, run, Reineer};
+          ({CurrentDistance, Score, Step, stop,
+            {_Name, _Distance, _RunTime, Step} = Reineer}) ->
+          {CurrentDistance, Score, 1, run, Reineer};
+          ({CurrentDistance, Score, Step, stop,
+            {_Name, _Distance, _RunTime, _RestTime} = Reineer}) ->
+          {CurrentDistance, Score, Step + 1, stop, Reineer} end,
+      Reineers)).
 
 add_point_to_winners(Reineers) ->
   [{Distance, _Score, _Step, _Action, _Reineer} = First | Rest] =
@@ -830,6 +828,106 @@ add_point_to_winners(Reineers) ->
                   ReineerDistance == Distance ->
                 {ReineerDistance, ReineerScore + 1, Step, Action, Reineer};
                 (OtherScore) -> OtherScore end, [First | Rest]).
+
+day_15a() ->
+  find_best_cookie(score_all_recipies(), fun highest_score/1).
+
+score_all_recipies() ->
+  combine(get_ingredients(
+            string:tokens(day_15_input(), "\n"))).
+
+get_ingredients(List) ->
+  lists:map(fun (Ingredient) ->
+                [Name, _Capacity, CapValue,
+                 _Durability, DurValue,
+                 _Flavor, FlavValue,
+                 _Texture, TextValue,
+                 _Calories, CalValue] = string:tokens(Ingredient, " "),
+                {Name -- ":", #{capacity => list_to_integer(CapValue -- ","),
+                                durability => list_to_integer(DurValue -- ","),
+                                flavor => list_to_integer(FlavValue -- ","),
+                                texture => list_to_integer(TextValue -- ","),
+                                calories => list_to_integer(CalValue)}}
+            end, List).
+
+combine(List) ->
+  lists:foldl(fun(K, Acc) ->
+                  Acc ++ (combine(K, List)) end,
+              [], lists:seq(1, length(List))).
+
+combine(1, L) -> [[X] || X <-L];
+combine(K, L) when K == length(L) -> [L];
+combine(K, [H|T]) ->
+  [[H | Subcombos] || Subcombos <- combine(K-1, T)]
+    ++(combine(K, T)).
+
+find_best_cookie(List, EvaluationFunction) ->
+  lists:max(lists:map(fun(Recipe) ->
+                          find_best_recipe(Recipe, EvaluationFunction) end, List)).
+
+find_best_recipe(Recipe, Evaluation) ->
+  Multipiers = get_spoon_sets(length(Recipe)),
+  lists:max(lists:map(fun (MultiplierList) ->
+                          traverse_recipes(MultiplierList, Recipe,
+                                           #{capacity => 0,
+                                             durability => 0,
+                                             flavor => 0,
+                                             texture => 0,
+                                             calories => 0}, Evaluation)
+                      end, Multipiers)).
+
+get_spoon_sets(N) ->
+  get_multipliers(0, N, N).
+
+get_multipliers(Higher, 1, _MaxN) when Higher < 100 ->
+  [[100 - Higher]];
+get_multipliers(_Higher, 1, _MaxN) ->
+  [[100]];
+get_multipliers(Higher, N, MaxN) ->
+  [[L | T] || L <- lists:seq(1, 100 - MaxN + 1),
+              T <- get_multipliers(L + Higher, N - 1, MaxN),
+              lists:sum([L | T]) == 100 - Higher].
+
+traverse_recipes([], [], Result, Evaluation) ->
+  Evaluation(Result);
+traverse_recipes([Number | TailNumbers],
+                 [{_Name, Values} | TailRecipies],
+                 RecipeScore, Evaluation) ->
+  traverse_recipes(TailNumbers, TailRecipies,
+                   lists:foldl(fun (Key, Map) ->
+                                   maps:put(Key,
+                                            Number * maps:get(Key, Values)
+                                            + maps:get(Key, Map, 0), Map)
+                               end, RecipeScore, maps:keys(RecipeScore)),
+                   Evaluation).
+
+highest_score(Result) ->
+  case  is_non_negative(Result) of
+    false -> 0;
+    true ->
+      score_recipe(Result)
+  end.
+
+is_non_negative(Result) ->
+  lists:foldl(fun(Key, Value) ->
+                  Value and (maps:get(Key, Result) > 0) end,
+              true, maps:keys(Result)).
+
+score_recipe(Result) ->
+  lists:foldl(fun (calories, Value) -> Value;
+                  (Key, Value) ->
+                  Value * maps:get(Key, Result) end, 1, maps:keys(Result)).
+
+day_15b() ->
+  find_best_cookie(score_all_recipies(), fun highest_score_500_calories/1).
+
+highest_score_500_calories(Result) ->
+  Ha500Calories = maps:get(calories, Result) == 500,
+  case  is_non_negative(Result) andalso Ha500Calories of
+    false -> 0;
+    true ->
+      score_recipe(Result)
+  end.
 
 day_1_input() ->
     "()(((()))(()()()((((()(((())(()(()((((((()(()(((())))((()(((()))((())(()((()()()()(((())(((((((())))()()(()(()(())(((((()()()((())(((((()()))))()(())(((())(())((((((())())))(()())))()))))()())()())((()()((()()()()(()((((((((()()())((()()(((((()(((())((())(()))()((((()((((((((())()((()())(())((()))())((((()())(((((((((((()()(((((()(()))())(((()(()))())((()(()())())())(()(((())(())())()()(()(()((()))((()))))((((()(((()))))((((()(()(()())())()(((()((((())((((()(((()()(())()()()())((()((((((()((()()))()((()))()(()()((())))(((()(((()))((()((()(()))(((()()(()(()()()))))()()(((()(((())())))))((()(((())()(()(())((()())))((((())))(()(()(()())()((()())))(((()((()(())()()((()((())(()()((())(())()))()))((()(())()))())(((((((()(()()(()(())())))))))(()((((((())((((())((())())(()()))))()(())(()())()())((())(()))))(()))(()((()))()(()((((((()()()()((((((((()(()(())((()()(()()))(())()())()((())))()))()())(((()))(())()(())()))()((()((()(()()())(())()()()((())())))((()()(()()((()(())()()())(((()(()()))))(())))(()(()())()))()()))))))()))))((((((())))())))(()(())())(()())))))(()))()))))))()((()))))()))))(()(()((()())())(()()))))(((())()))())())())(((()(()()))(())()(())(())((((((()()))))((()(()))))))(()))())(((()()(()))()())()()()())))))))))))))(())(()))(()))((()(())(()())(())())(()())(())()()(()())))()()()))(())())()))())())(())((())))))))(())))(())))))()))))((())(()(((()))))(()))()((()(())))(()())(((((()))()())()()))))()))))()))())(()(()()()))()))))))((()))))))))))()((()))((()(())((())()()(()()))()(()))))()()(()))()))(((())))(())()((())(())(()())()())())))))))())))()((())))()))(()))()()))(((((((()))())(()()))(()()(()))()(()((()())()))))))(((()()()())))(())()))()())(()()))()()))))))))(())))()))()()))))))()))()())))()(())(())))))()(())()()(()()))))())((()))))()))))(()(((((()))))))))())))())()(())()()))))(())))())()()())()()())()(()))))()))()))))))))())))((()))()))()))())))()())()()())))())))(()((())()((()))())))))())()(())((())))))))))))())()())(())())())(()))(()))()))())(()(())())()())()()(()))))(()(())))))))(())))())(())))))))())()()(())())())))(())))))()))()(()())()(()))())())))))()()(()))()))))())))))))))()))))()))))))())()())()()))))()())))())))))))))))()()))))()()(((()))()()(())()))))((()))))(()))(())())))(())()))))))(()))()))))(())())))))()))(()())))))))))))))())))))))))()((()())(()())))))))((()))))(())(())))()(()())())))())())(()()()())))()))))))())))))())()()())))))))))))()()(()))))()())()))((()())(()))))()(()))))))))))()())())(((())(()))))())()))()))()))))))()))))))(()))))()))))()(())))(())))(()))())()()(()()))()))(()()))))))))()))(()))())(()()(()(()())()()))()))))))))(())))))((()()(()))())())))))()))())(()())()()))())))()(()()()()))((())())))())()(()()))()))))))))(()))(())))()))))(()(()())(()))))()())())()))()()))())))))))))))())()))))))()))))))))())))))()))))())(()())))(())()))())())))))()()(()()())(()())))()()))(((()))(()()()))))()))))()))))((())))()((((((()()))))))())))))))))))(((()))))))))))))(())())))))())(()))))))(()))((()))())))()(()((()))()))()))))))))))())()))()(()()))))())))())(())()(()))()))())(()))()))))(()()))()()(())))))()))(())(()(()()))(()()())))))(((()))))))()))))))))))))(())(()))))()())())()()((()()))())))))(()))))())))))))()()()))))))))())))()(((()()))(())))))(((())())))))((()))()(()))(()))))(()())))(()))())))))()))))(())(())))()((()))(())())))()()))()))))))))()))(()()()(()()()(()))())(())()())(((()))(())))))))))(((()())))()()))))))))()(())(()))()((((())(())(()())))()))(((())()()()))((()))(()))())())))())))(()))())()())())(()(())())()()()(())))())(())))(())))(())()))()))(()((()))))))))())(()))))))())(()()))()()))()(()(()())))()()(()((()((((((()))(())))()()()))())()))((()()(()))())((()(()(()))(()()))))()())))()))()())))))))()()((()())(())))()))(()))(())(()))())(()(())))()()))))))(((()(((()()))()(()(())())((()()))()))()))()))()(()()()(()))((()())()(())))()()))(((())()()())(())()((()()()()(()(())(()()))()(((((()())))((())))))(()()()))))(((()(())))()))((()((()(())()(()((())))((()())()(()))(((()())()()(()))(())(((()((()())()((())()())(((()()))((()((())(()))(()())(()()()))((()))(())(()((()()())((()))(())))(())(())(())))(()())))(((((()(()(((((()())((((()(()())(())(()()(((())((()(((()()(((()()((((((())))())(()((((((()(()))()))()()((()((()))))()(()()(()((()()))))))(((((()(((((())()()()(())())))))))()))((()()(())))(())(()()()())))))(()((((())))))))()()(((()(()(()(()(()())()()()(((((((((()()())()(()))((()()()()()(((((((()())()((())()))((((((()(()(()(()())(((()(((((((()(((())(((((((((())(())())()))((()(()))(((()()())(())(()(()()(((()(())()))())))(())((((((())(()()())()()(((()(((())(()(((())(((((((()(((((((((()))(())(()(()(()))))((()))()(())())())((()(()((()()))((()()((()(())(())(()((())(((())(((()()()((((((()()(())((((())()))))(())((()(()((())))(((((()(()()())())((())())))((())((()((()()((((((())(((()()(()())())(()(()))(()(()))())())()(((((((()(((()(())()()((())((()(()()((()(()()(((((((((((())((())((((((())((()((((()(()((((()(((((((())()((()))))())()((()((((()(()(((()((()())))(())())(((()(((())((((((()(((((((((()()(())))(()(((((()((((()())))((()((()((()(()()(((())((((((((((((()(((())(()(((((()))(()()(()()()()()()((())(((((((())(((((())))))())()(()()(()(()(((()()(((((())(()((()((()(((()()((()((((())()))()((((())(())))()())(((())(())(()()((()(((()()((((((((((()()(()())())(((((((((())((((()))()()((((())(()((((()(((())())(((((((((((()((((())))(())(()(((()(((()((())(((((()((()()(()(()()((((((()((((()((()(()((()(()((((((()))))()()(((((()((()(()(())()))(())(((((((()((((()())(()((()((()(()))())))(())((()))))(((((((()()()())(()))(()()((()())()((()((()()()(()(()()))(()())(())(((((()(((((((((((()((()(((()(((((((()()((((((()(((((()(()((()(((((())((((((()))((((())((()()((())(((())()(((((()()(((((()((()(()(((((((()(((((()((()((()((())(())((())(()))()()))(()()(()(()()(((((((()(((()(((())()(((((()((((((()())((((())()((()((()(()()())(()))((((()()((((((()((()(()(()((((()((()((())((((((()(()(())((((((()((((((((((()((())()))()(()(()(((((()()()))((())))()(()((((((((((((((()(((()((((()((())((()((()(((()()(()(((()((())(()()())))()(()(()(((((()()(()(()((((()(((((())()(()(()))(((((()()(((()()(())((((((((((((((())((())(((((((((((())()()()(())()(()(()(((((((((())(((()))(()()())(()((((()(())(((((()())(())((((((((())()((((()((((((())(()((()(())(((()((((()))(((((((((()()))((((()(())()()()(())(()((())((()()))()(((())(((((())((((((()()))(((((((((()((((((())))(((((((()((()(()(())))())(()(()))()(((((()())(()))()(()(())(((()))))())()())))(((((()))())()((()(()))))((()()()((((((()))()()((((((((())((()(()(((()(()((())((()())(()((((())(()(((()()()(()(()()))())())((((((((((())())((()))()((())(())(())))())()(()()(())))())(()))(((()(()()(((()(((())))()(((()(())()((((((())()))()))()((((((()(()(((((()())))()))))())()()(((()(((((())((()()(()((()((()(()(()(())))(()()()()((()(())(((()((()))((((()))())(())))())(()))()()()())()))(((()()())()((())))(())(()()()()(()())((()(()()((((())))((()((()(())((()(()((())()(()()(((()())()()())((()))((())(((()()(())))()()))(((()((())()(((((()())(())((())()())())((((((()(()(((((()))(()(".
@@ -3893,3 +3991,9 @@ Blitzen can fly 14 km/s for 3 seconds, but then must rest for 38 seconds.
 Prancer can fly 3 km/s for 21 seconds, but then must rest for 40 seconds.
 Comet can fly 18 km/s for 6 seconds, but then must rest for 103 seconds.
 Vixen can fly 18 km/s for 5 seconds, but then must rest for 84 seconds.".
+
+day_15_input() ->
+  "Frosting: capacity 4, durability -2, flavor 0, texture 0, calories 5
+Candy: capacity 0, durability 5, flavor -1, texture 0, calories 8
+Butterscotch: capacity -1, durability 0, flavor 5, texture 0, calories 6
+Sugar: capacity 0, durability 0, flavor -2, texture 2, calories 1".

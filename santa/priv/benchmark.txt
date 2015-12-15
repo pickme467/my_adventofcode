@@ -26,3 +26,5 @@ timer:tc(santa, day_13a, []). -> {   122896,709}
 timer:tc(santa, day_13b, []). -> {  1270446,668}
 timer:tc(santa, day_14a, []). -> {       65,2640}
 timer:tc(santa, day_14b, []). -> {     3019,1102}
+timer:tc(santa, day_15a, []). -> {   631477,18965440}
+timer:tc(santa, day_15b, []). -> {   661620,15862900}
