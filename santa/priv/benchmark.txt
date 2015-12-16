@@ -28,4 +28,5 @@ timer:tc(santa, day_14a, []). -> {      129,2640}
 timer:tc(santa, day_14b, []). -> {     9148,1102}
 timer:tc(santa, day_15a, []). -> {  1020592,18965440}
 timer:tc(santa, day_15b, []). -> {   865932,15862900}
-timer:tc(santa, day_16b, []). -> {     3931,"405"}
+timer:tc(santa, day_16a, []). -> {     4012,"103"}
+timer:tc(santa, day_16b, []). -> {     3703,"405"}

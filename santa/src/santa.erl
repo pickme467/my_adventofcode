@@ -30,6 +30,7 @@
          day_14b/0,
          day_15a/0,
          day_15b/0,
+         day_16a/0,
          day_16b/0]).
 
 day_1a() ->
@@ -921,19 +922,22 @@ highest_score_500_calories(Result) ->
       highest_score(Result)
   end.
 
-day_16b() ->
-  Aunts = get_aunts(string:tokens(day_16_input(), "\n")),
-  RememberedFeatures = make_features_map(["children", "3",
-                                          "cats", "7",
-                                          "samoyeds", "2",
-                                          "pomeranians", "3",
-                                          "akitas", "0",
-                                          "vizslas", "0",
-                                          "goldfish", "5",
-                                          "trees", "3",
-                                          "cars", "2",
-                                          "perfumes", "1"], maps:new()),
-  evaluate_aunts(Aunts, RememberedFeatures).
+day_16a() ->
+  find_my_aunt(fun features_the_same/2).
+
+find_my_aunt(Matcher) ->
+    Aunts = get_aunts(string:tokens(day_16_input(), "\n")),
+    RememberedFeatures = make_features_map(["children", "3",
+                                            "cats", "7",
+                                            "samoyeds", "2",
+                                            "pomeranians", "3",
+                                            "akitas", "0",
+                                            "vizslas", "0",
+                                            "goldfish", "5",
+                                            "trees", "3",
+                                            "cars", "2",
+                                            "perfumes", "1"], maps:new()),
+    evaluate_aunts(Aunts, RememberedFeatures, Matcher).
 
 get_aunts(List) ->
   lists:map(fun (Aunt) ->
@@ -945,12 +949,21 @@ make_features_map([], Map) ->
 make_features_map([Feature, Value | Rest], Map) ->
   make_features_map(Rest, maps:put(Feature, Value, Map)).
 
-evaluate_aunts([{Aunt, AuntFeatures} | Rest], Features) ->
-  case features_match(AuntFeatures, Features) of
+evaluate_aunts([{Aunt, AuntFeatures} | Rest], Features, Matcher) ->
+  case Matcher(AuntFeatures, Features) of
     true ->
       Aunt;
-    false -> evaluate_aunts(Rest, Features)
+    false -> evaluate_aunts(Rest, Features, Matcher)
   end.
+
+features_the_same(Aunt, Features) ->
+  lists:foldl(fun (Feature, true) ->
+                  maps:get(Feature, Aunt) == maps:get(Feature, Features);
+                  (_Any, false) -> false
+              end, true, maps:keys(Aunt)).
+
+day_16b() ->
+  find_my_aunt(fun features_match/2).
 
 features_match(Aunt, Features) ->
   lists:foldl(fun (CatTree, true) when CatTree == "cats"
