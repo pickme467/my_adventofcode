@@ -32,5 +32,7 @@ timer:tc(santa, day_16a, []). -> {     4012,"103"}
 timer:tc(santa, day_16b, []). -> {     3703,"405"}
 timer:tc(santa, day_17a, []). -> {   498154,654}
 timer:tc(santa, day_17b, []). -> {   759019,57}
-timer:tc(santa, day_18a, []). -> { 63746091,1061}
-timer:tc(santa, day_18b, []). -> { 63471718,1006}
+timer:tc(santa, day_18a, []). -> { 63746091,1061} /pc
+timer:tc(santa, day_18b, []). -> { 63471718,1006} /pc
+timer:tc(santa, day_18a, []). -> {  1736666,1061} /mac
+timer:tc(santa, day_18b, []). -> {  1807785,1006} /mac
