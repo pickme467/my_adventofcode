@@ -36,3 +36,4 @@ timer:tc(santa, day_18a, []). -> { 63746091,1061} /pc
 timer:tc(santa, day_18b, []). -> { 63471718,1006} /pc
 timer:tc(santa, day_18a, []). -> {  1736666,1061} /mac
 timer:tc(santa, day_18b, []). -> {  1807785,1006} /mac
+timer:tc(santa, day_19a, []). -> {    11045,535}
