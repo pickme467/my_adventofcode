@@ -40,7 +40,8 @@
          day_19b/0,
          day_20a/0,
          day_20b/0,
-         day_21a/0]).
+         day_21a/0,
+         day_21b/0]).
 
 day_1a() ->
   day_1a(day_1_input(), 0).
@@ -1231,23 +1232,81 @@ score_with_lazy_elves(X, Score, Elf) ->
   score_with_lazy_elves(X, Score, Elf + 1).
 
 day_21a() ->
-  FoeData = lists:map(fun(Accessory) ->
-                [What, HowMany] = string:tokens(Accessory, ":"),
-                          {What, list_to_integer(string:strip(HowMany))}
-                      end, string:tokens(day_21_input(), "\n")),
-  find_minimum_winning(100, proplists:get_value("Hit Points", FoeData)).
+  FoeData = get_foe_data(),
+  Power = find_minimu_winning_power(100,
+                                    proplists:get_value("Hit Points", FoeData)),
+  lists:min(
+    find_cost(Power + proplists:get_value("Armor", FoeData), damage))
+    + lists:min(
+        find_cost(proplists:get_value("Damage", FoeData) - Power, armor)).
 
-find_minimum_winning(My, Foe) ->
+get_foe_data() ->
+  lists:map(fun(Accessory) ->
+                [What, HowMany] = string:tokens(Accessory, ":"),
+                {What, list_to_integer(string:strip(HowMany))}
+            end, string:tokens(day_21_input(), "\n")).
+
+find_minimu_winning_power(My, Foe) ->
   find_minimum_winning(My, Foe, 1).
 
 find_minimum_winning(My, Foe, Damage) ->
-
   case My div Damage * Damage < My
     andalso My div Damage * Damage + Damage >= Foe of
     true ->
       Damage;
     false ->
       find_minimum_winning(My, Foe, Damage + 1)
+  end.
+
+find_cost(Value, damage) ->
+  find_cost(Value, damage, day_21_weapons(), day_21_rings_weapons());
+find_cost(Value, armor) ->
+  find_cost(Value, armor, day_21_armory(), day_21_rings_armory()).
+
+find_cost(Value, Type, Weapons, Rings) ->
+  [get_cost_for(X)
+  + get_cost_for(Y)
+  + get_cost_for(Z) ||
+   X <- Weapons,
+   Y <- Rings,
+   Z <- Rings,
+    get_property(Type, X)
+    + get_property(Type, Y)
+    + get_property(Type, Z) == Value] ++
+    [get_cost_for(X)
+     + get_cost_for(Y)
+     ||  X <- Weapons,
+         Y <- Rings,
+         get_property(Type, X)
+           + get_property(Type, Y) == Value] ++
+    [get_cost_for(X)
+     ||  X <- Weapons,
+         get_property(Type, X) == Value].
+
+get_property(Type, X) -> proplists:get_value(Type, element(2, X)).
+
+get_cost_for(X) -> proplists:get_value(cost, element(2, X)).
+
+day_21b() ->
+  FoeData = get_foe_data(),
+  Power = find_maximu_losing_power(100,
+                                   proplists:get_value("Hit Points", FoeData)),
+
+  lists:max(
+    find_cost(Power + proplists:get_value("Armor", FoeData), damage))
+    + lists:max(
+        find_cost(proplists:get_value("Damage", FoeData) - Power, armor)).
+
+find_maximu_losing_power(My, Foe) ->
+  find_maximum_losing(My, Foe, 9).
+
+find_maximum_losing(My, Foe, Damage) ->
+  case Foe div Damage * Damage < Foe
+    andalso My div Damage * Damage >= My of
+    true ->
+      Damage;
+    false ->
+      find_maximum_losing(My, Foe, Damage - 1)
   end.
 
 day_1_input() ->
@@ -5000,3 +5059,27 @@ day_21_input() ->
   "Hit Points: 103
 Damage: 9
 Armor: 2".
+
+day_21_weapons() ->
+  [{dagger, [{cost, 8}, {damage, 4}]},
+   {shortsword, [{cost, 10}, {damage, 5}]},
+   {warhammer, [{cost, 25}, {damage, 6}]},
+   {longsword, [{cost, 40}, {damage, 7}]},
+   {greataxe, [{cost, 74}, {damage, 8}]}].
+
+day_21_armory() ->
+  [{leather, [{cost, 13}, {armor, 1}]},
+   {chainmail, [{cost, 31}, {armor, 2}]},
+   {splintmail, [{cost, 53}, {armor, 3}]},
+   {bandedmail, [{cost, 75}, {armor, 4}]},
+   {platemail, [{cost, 102}, {armor, 5}]}].
+
+day_21_rings_weapons() ->
+  [{damage_p1, [{cost, 25}, {damage, 1}]},
+   {damage_p2, [{cost, 50}, {damage, 2}]},
+   {damage_p3, [{cost, 100}, {damage, 3}]}].
+
+day_21_rings_armory() ->
+   [{defense_p1, [{cost, 20}, {armor, 1}]},
+   {defense_p2, [{cost, 40}, {armor, 2}]},
+   {defense_p3, [{cost, 80}, {armor, 3}]}].
