@@ -41,7 +41,9 @@
          day_20a/0,
          day_20b/0,
          day_21a/0,
-         day_21b/0]).
+         day_21b/0,
+         day_22a/0,
+         day_22b/0]).
 
 day_1a() ->
   day_1a(day_1_input(), 0).
@@ -936,18 +938,18 @@ day_16a() ->
   find_my_aunt(fun features_the_same/2).
 
 find_my_aunt(Matcher) ->
-    Aunts = get_aunts(string:tokens(day_16_input(), "\n")),
-    RememberedFeatures = make_features_map(["children", "3",
-                                            "cats", "7",
-                                            "samoyeds", "2",
-                                            "pomeranians", "3",
-                                            "akitas", "0",
-                                            "vizslas", "0",
-                                            "goldfish", "5",
-                                            "trees", "3",
-                                            "cars", "2",
-                                            "perfumes", "1"], maps:new()),
-    evaluate_aunts(Aunts, RememberedFeatures, Matcher).
+  Aunts = get_aunts(string:tokens(day_16_input(), "\n")),
+  RememberedFeatures = make_features_map(["children", "3",
+                                          "cats", "7",
+                                          "samoyeds", "2",
+                                          "pomeranians", "3",
+                                          "akitas", "0",
+                                          "vizslas", "0",
+                                          "goldfish", "5",
+                                          "trees", "3",
+                                          "cars", "2",
+                                          "perfumes", "1"], maps:new()),
+  evaluate_aunts(Aunts, RememberedFeatures, Matcher).
 
 get_aunts(List) ->
   lists:map(fun (Aunt) ->
@@ -977,16 +979,16 @@ day_16b() ->
 
 features_match(Aunt, Features) ->
   lists:foldl(fun (CatTree, true) when CatTree == "cats"
-                                      orelse CatTree == "trees" ->
+                                       orelse CatTree == "trees" ->
                   maps:get(CatTree, Aunt) > maps:get(CatTree, Features);
                   (PomFish, true)
                   when PomFish == "pomeranians"
-                      orelse PomFish == "goldfish" ->
+                       orelse PomFish == "goldfish" ->
                   maps:get(PomFish, Aunt) < maps:get(PomFish, Features);
                   (Other, true) ->
                   maps:get(Other, Aunt) == maps:get(Other, Features);
                   (_Any, false) ->
-                   false end, true, maps:keys(Aunt)).
+                  false end, true, maps:keys(Aunt)).
 
 day_17a() ->
   has_150_litres(combine(
@@ -1030,11 +1032,11 @@ check_containers(_Containers, Minimum, Sum) ->
 
 day_18a() ->
   count_lights(iterate_lights(get_lights(day_18_input(), maps:new(), 1), 100,
-                             fun calculate_state/2)).
+                              fun calculate_state/2)).
 
 count_lights(Map) ->
   lists:foldl(fun(Key, Value) ->
-                 Value + maps:get(Key, Map) end, 0, maps:keys(Map)).
+                  Value + maps:get(Key, Map) end, 0, maps:keys(Map)).
 
 get_lights([], Map, _Index) ->
   Map;
@@ -1097,7 +1099,7 @@ filter_out_incorrect_neighbours([N | Rest], Filtered) ->
 
 day_18b() ->
   count_lights(iterate_lights(get_lights(day_18_input(), maps:new(), 1), 100,
-                             fun calculate_state_with_corners/2)).
+                              fun calculate_state_with_corners/2)).
 
 calculate_state_with_corners(Key, Map) ->
   update_for_corner_case(Key, Map, calculate_state(Key, Map)).
@@ -1172,7 +1174,7 @@ reverse_map(From, To, Map) ->
   maps:put(To, From, Map).
 
 reduce("e", _KeysToUse, _AllKeys,  _Map, _Index, Iteration) ->
-Iteration;
+  Iteration;
 reduce(_ToReduce, [], _AllKeys, _Map, _Index, _Iteration) ->
   not_found;
 reduce(ToReduce, [Key | Keys], AllKeys, Map, IndexForKey, Iteration) ->
@@ -1265,14 +1267,14 @@ find_cost(Value, armor) ->
 
 find_cost(Value, Type, Weapons, Rings) ->
   [get_cost_for(X)
-  + get_cost_for(Y)
-  + get_cost_for(Z) ||
-   X <- Weapons,
-   Y <- Rings,
-   Z <- Rings,
+   + get_cost_for(Y)
+   + get_cost_for(Z) ||
+    X <- Weapons,
+    Y <- Rings,
+    Z <- Rings,
     get_property(Type, X)
-    + get_property(Type, Y)
-    + get_property(Type, Z) == Value] ++
+      + get_property(Type, Y)
+      + get_property(Type, Z) == Value] ++
     [get_cost_for(X)
      + get_cost_for(Y)
      ||  X <- Weapons,
@@ -1308,6 +1310,182 @@ find_maximum_losing(My, Foe, Damage) ->
     false ->
       find_maximum_losing(My, Foe, Damage - 1)
   end.
+
+-record(game, {
+          used_mana = 0,
+          mana = 500,
+          player_hp = 50,
+          boss_hp = 55,
+          boss_damage = 8,
+          armor = 0,
+          armor_count = 0,
+          poison = 0,
+          poison_count = 0,
+          recharge = 0,
+          recharge_count = 0
+         }).
+
+day_22a() ->
+  find_best_game(fun update_effects/2).
+
+find_best_game(Effect) ->
+  lists:min(
+    lists:foldl(
+      fun (N, Total) ->
+          lists:foldl(
+            fun (Scenario, Acc) ->
+                case play_scenario(Scenario, Effect) of
+                  {lost, _Game} ->  Acc;
+                  {won, Game} -> [Game#game.used_mana | Acc]
+                end
+            end, [], combinations(maps:keys(day_22_magic()), N))
+            ++ Total
+      end, [], lists:seq(8,9))).
+
+play_scenario(Scenario, Effect) ->
+  play_scenario(Scenario, #game{}, Effect).
+
+play_scenario([], Game, _Effect) when
+    Game#game.player_hp > 0 andalso Game#game.mana >= 0 andalso
+    Game#game.boss_hp =< 0 ->
+  {won, Game};
+play_scenario([], Game, _Effect) ->
+  {lost, Game};
+play_scenario([Step | Scenario], Game, Effect) ->
+  NewGame = Effect(Game, player),
+  case game_verdict(NewGame, Scenario) of
+    lost -> {lost, NewGame};
+    won -> {won, NewGame};
+    continue ->
+      PlayerGame = player_turn(Step, NewGame),
+      case game_verdict(PlayerGame, Scenario) of
+        lost -> {lost, PlayerGame};
+        won -> {won, PlayerGame};
+        continue ->
+          BossGameEffect = Effect(PlayerGame, boss),
+          case game_verdict(BossGameEffect, Scenario) of
+            lost -> {lost, BossGameEffect};
+            won -> {won, BossGameEffect};
+            continue ->
+              BossGame = boss_turn(Step, BossGameEffect),
+              play_scenario(Scenario, BossGame, Effect)
+          end
+      end
+  end.
+
+game_verdict(lost, _Scenarios) ->
+  lost;
+game_verdict(Game, _Scenarios) when
+    Game#game.player_hp =< 0 ->
+  lost;
+game_verdict(Game, []) when Game#game.boss_hp =< 0 ->
+  won;
+game_verdict(_Game, _Scenarios) ->
+  continue.
+
+player_turn(magic_missle, Game) when Game#game.mana < 53 ->
+  lost;
+player_turn(magic_missle, Game) ->
+  Game#game{used_mana = Game#game.used_mana + 53,
+            mana = Game#game.mana - 53,
+            boss_hp = Game#game.boss_hp - 4};
+player_turn(drain, Game) when Game#game.mana < 73 ->
+  lost;
+player_turn(drain, Game) ->
+  Game#game{used_mana = Game#game.used_mana + 73,
+            mana = Game#game.mana - 73,
+            player_hp = Game#game.player_hp + 2,
+            boss_hp = Game#game.boss_hp - 2};
+player_turn(shield, Game) when Game#game.mana < 113 ->
+  lost;
+player_turn(shield, Game) when Game#game.armor_count > 0 ->
+  lost;
+player_turn(shield, Game) ->
+  Game#game{used_mana = Game#game.used_mana + 113,
+            mana = Game#game.mana - 113,
+            armor = 7,
+            armor_count = 6};
+player_turn(poison, Game) when Game#game.mana < 173 ->
+  lost;
+player_turn(poison, Game) when Game#game.poison_count > 0 ->
+  lost;
+player_turn(poison, Game) ->
+  Game#game{used_mana = Game#game.used_mana + 173,
+            mana = Game#game.mana - 173,
+            poison = 3,
+            poison_count = 6};
+player_turn(recharge, Game) when Game#game.mana < 229 ->
+  lost;
+player_turn(recharge, Game) when Game#game.recharge_count > 0 ->
+  lost;
+player_turn(recharge, Game) ->
+  Game#game{used_mana = Game#game.used_mana + 229,
+            mana = Game#game.mana - 229,
+            recharge = 101,
+            recharge_count = 5}.
+
+boss_turn(_Any, Game) ->
+  Game#game{player_hp = Game#game.player_hp - Game#game.boss_damage +
+              Game#game.armor}.
+
+update_effects(lost, _Any) ->
+  lost;
+update_effects(Game, _Any) ->
+  update_effects(Game).
+
+update_effects(lost) ->
+  lost;
+update_effects(Game) ->
+  {Armor, ArmorCount } = case Game#game.armor_count of
+                           0 -> {0, 0};
+                           ArmorNumber -> {Game#game.armor,
+                                           ArmorNumber - 1}
+                         end,
+  {BossHp, Poison, PoisonCount} = case Game#game.poison_count of
+                                    0 ->
+                                      {Game#game.boss_hp, 0, 0};
+                                    PoisonNumber ->
+                                      {Game#game.boss_hp - Game#game.poison,
+                                       Game#game.poison,
+                                       PoisonNumber - 1}
+                                  end,
+  {Mana, Recharge, RechargeCount} = case Game#game.recharge_count of
+                                      0 ->
+                                        {Game#game.mana, 0, 0};
+                                      RechargeNumber ->
+                                        {Game#game.mana + Game#game.recharge,
+                                         Game#game.recharge,
+                                         RechargeNumber - 1}
+                                    end,
+  Game#game{armor = Armor,
+            armor_count = ArmorCount,
+            boss_hp = BossHp,
+            poison = Poison,
+            poison_count = PoisonCount,
+            mana = Mana,
+            recharge = Recharge,
+            recharge_count = RechargeCount}.
+
+combinations(List, N) ->
+  combinations(List, N, [], []).
+
+combinations(_List, 0, Partial, Combinations) ->
+  [Partial] ++ Combinations;
+combinations(List, N, Partial, Combinations) ->
+  lists:foldl(fun(Elem, Combination) ->
+                  combinations(List, N - 1, [Elem] ++ Partial, Combination)
+              end, Combinations, List).
+
+day_22b() ->
+  find_best_game(fun update_effects_hard/2).
+
+update_effects_hard(lost, _Any) ->
+  lost;
+update_effects_hard(Game, boss) ->
+  update_effects(Game);
+update_effects_hard(Game, player) ->
+  NewGame = update_effects(Game),
+  NewGame#game{player_hp = NewGame#game.player_hp -1}.
 
 day_1_input() ->
     "()(((()))(()()()((((()(((())(()(()((((((()(()(((())))((()(((()))((())(()((()()()()(((())(((((((())))()()(()(()(())(((((()()()((())(((((()()))))()(())(((())(())((((((())())))(()())))()))))()())()())((()()((()()()()(()((((((((()()())((()()(((((()(((())((())(()))()((((()((((((((())()((()())(())((()))())((((()())(((((((((((()()(((((()(()))())(((()(()))())((()(()())())())(()(((())(())())()()(()(()((()))((()))))((((()(((()))))((((()(()(()())())()(((()((((())((((()(((()()(())()()()())((()((((((()((()()))()((()))()(()()((())))(((()(((()))((()((()(()))(((()()(()(()()()))))()()(((()(((())())))))((()(((())()(()(())((()())))((((())))(()(()(()())()((()())))(((()((()(())()()((()((())(()()((())(())()))()))((()(())()))())(((((((()(()()(()(())())))))))(()((((((())((((())((())())(()()))))()(())(()())()())((())(()))))(()))(()((()))()(()((((((()()()()((((((((()(()(())((()()(()()))(())()())()((())))()))()())(((()))(())()(())()))()((()((()(()()())(())()()()((())())))((()()(()()((()(())()()())(((()(()()))))(())))(()(()())()))()()))))))()))))((((((())))())))(()(())())(()())))))(()))()))))))()((()))))()))))(()(()((()())())(()()))))(((())()))())())())(((()(()()))(())()(())(())((((((()()))))((()(()))))))(()))())(((()()(()))()())()()()())))))))))))))(())(()))(()))((()(())(()())(())())(()())(())()()(()())))()()()))(())())()))())())(())((())))))))(())))(())))))()))))((())(()(((()))))(()))()((()(())))(()())(((((()))()())()()))))()))))()))())(()(()()()))()))))))((()))))))))))()((()))((()(())((())()()(()()))()(()))))()()(()))()))(((())))(())()((())(())(()())()())())))))))())))()((())))()))(()))()()))(((((((()))())(()()))(()()(()))()(()((()())()))))))(((()()()())))(())()))()())(()()))()()))))))))(())))()))()()))))))()))()())))()(())(())))))()(())()()(()()))))())((()))))()))))(()(((((()))))))))())))())()(())()()))))(())))())()()())()()())()(()))))()))()))))))))())))((()))()))()))())))()())()()())))())))(()((())()((()))())))))())()(())((())))))))))))())()())(())())())(()))(()))()))())(()(())())()())()()(()))))(()(())))))))(())))())(())))))))())()()(())())())))(())))))()))()(()())()(()))())())))))()()(()))()))))())))))))))()))))()))))))())()())()()))))()())))())))))))))))()()))))()()(((()))()()(())()))))((()))))(()))(())())))(())()))))))(()))()))))(())())))))()))(()())))))))))))))())))))))))()((()())(()())))))))((()))))(())(())))()(()())())))())())(()()()())))()))))))())))))())()()())))))))))))()()(()))))()())()))((()())(()))))()(()))))))))))()())())(((())(()))))())()))()))()))))))()))))))(()))))()))))()(())))(())))(()))())()()(()()))()))(()()))))))))()))(()))())(()()(()(()())()()))()))))))))(())))))((()()(()))())())))))()))())(()())()()))())))()(()()()()))((())())))())()(()()))()))))))))(()))(())))()))))(()(()())(()))))()())())()))()()))())))))))))))())()))))))()))))))))())))))()))))())(()())))(())()))())())))))()()(()()())(()())))()()))(((()))(()()()))))()))))()))))((())))()((((((()()))))))())))))))))))(((()))))))))))))(())())))))())(()))))))(()))((()))())))()(()((()))()))()))))))))))())()))()(()()))))())))())(())()(()))()))())(()))()))))(()()))()()(())))))()))(())(()(()()))(()()())))))(((()))))))()))))))))))))(())(()))))()())())()()((()()))())))))(()))))())))))))()()()))))))))())))()(((()()))(())))))(((())())))))((()))()(()))(()))))(()())))(()))())))))()))))(())(())))()((()))(())())))()()))()))))))))()))(()()()(()()()(()))())(())()())(((()))(())))))))))(((()())))()()))))))))()(())(()))()((((())(())(()())))()))(((())()()()))((()))(()))())())))())))(()))())()())())(()(())())()()()(())))())(())))(())))(())()))()))(()((()))))))))())(()))))))())(()()))()()))()(()(()())))()()(()((()((((((()))(())))()()()))())()))((()()(()))())((()(()(()))(()()))))()())))()))()())))))))()()((()())(())))()))(()))(())(()))())(()(())))()()))))))(((()(((()()))()(()(())())((()()))()))()))()))()(()()()(()))((()())()(())))()()))(((())()()())(())()((()()()()(()(())(()()))()(((((()())))((())))))(()()()))))(((()(())))()))((()((()(())()(()((())))((()())()(()))(((()())()()(()))(())(((()((()())()((())()())(((()()))((()((())(()))(()())(()()()))((()))(())(()((()()())((()))(())))(())(())(())))(()())))(((((()(()(((((()())((((()(()())(())(()()(((())((()(((()()(((()()((((((())))())(()((((((()(()))()))()()((()((()))))()(()()(()((()()))))))(((((()(((((())()()()(())())))))))()))((()()(())))(())(()()()())))))(()((((())))))))()()(((()(()(()(()(()())()()()(((((((((()()())()(()))((()()()()()(((((((()())()((())()))((((((()(()(()(()())(((()(((((((()(((())(((((((((())(())())()))((()(()))(((()()())(())(()(()()(((()(())()))())))(())((((((())(()()())()()(((()(((())(()(((())(((((((()(((((((((()))(())(()(()(()))))((()))()(())())())((()(()((()()))((()()((()(())(())(()((())(((())(((()()()((((((()()(())((((())()))))(())((()(()((())))(((((()(()()())())((())())))((())((()((()()((((((())(((()()(()())())(()(()))(()(()))())())()(((((((()(((()(())()()((())((()(()()((()(()()(((((((((((())((())((((((())((()((((()(()((((()(((((((())()((()))))())()((()((((()(()(((()((()())))(())())(((()(((())((((((()(((((((((()()(())))(()(((((()((((()())))((()((()((()(()()(((())((((((((((((()(((())(()(((((()))(()()(()()()()()()((())(((((((())(((((())))))())()(()()(()(()(((()()(((((())(()((()((()(((()()((()((((())()))()((((())(())))()())(((())(())(()()((()(((()()((((((((((()()(()())())(((((((((())((((()))()()((((())(()((((()(((())())(((((((((((()((((())))(())(()(((()(((()((())(((((()((()()(()(()()((((((()((((()((()(()((()(()((((((()))))()()(((((()((()(()(())()))(())(((((((()((((()())(()((()((()(()))())))(())((()))))(((((((()()()())(()))(()()((()())()((()((()()()(()(()()))(()())(())(((((()(((((((((((()((()(((()(((((((()()((((((()(((((()(()((()(((((())((((((()))((((())((()()((())(((())()(((((()()(((((()((()(()(((((((()(((((()((()((()((())(())((())(()))()()))(()()(()(()()(((((((()(((()(((())()(((((()((((((()())((((())()((()((()(()()())(()))((((()()((((((()((()(()(()((((()((()((())((((((()(()(())((((((()((((((((((()((())()))()(()(()(((((()()()))((())))()(()((((((((((((((()(((()((((()((())((()((()(((()()(()(((()((())(()()())))()(()(()(((((()()(()(()((((()(((((())()(()(()))(((((()()(((()()(())((((((((((((((())((())(((((((((((())()()()(())()(()(()(((((((((())(((()))(()()())(()((((()(())(((((()())(())((((((((())()((((()((((((())(()((()(())(((()((((()))(((((((((()()))((((()(())()()()(())(()((())((()()))()(((())(((((())((((((()()))(((((((((()((((((())))(((((((()((()(()(())))())(()(()))()(((((()())(()))()(()(())(((()))))())()())))(((((()))())()((()(()))))((()()()((((((()))()()((((((((())((()(()(((()(()((())((()())(()((((())(()(((()()()(()(()()))())())((((((((((())())((()))()((())(())(())))())()(()()(())))())(()))(((()(()()(((()(((())))()(((()(())()((((((())()))()))()((((((()(()(((((()())))()))))())()()(((()(((((())((()()(()((()((()(()(()(())))(()()()()((()(())(((()((()))((((()))())(())))())(()))()()()())()))(((()()())()((())))(())(()()()()(()())((()(()()((((())))((()((()(())((()(()((())()(()()(((()())()()())((()))((())(((()()(())))()()))(((()((())()(((((()())(())((())()())())((((((()(()(((((()))(()(".
@@ -5083,3 +5261,10 @@ day_21_rings_armory() ->
    [{defense_p1, [{cost, 20}, {armor, 1}]},
    {defense_p2, [{cost, 40}, {armor, 2}]},
    {defense_p3, [{cost, 80}, {armor, 3}]}].
+
+day_22_magic() ->
+  #{magic_missle => [{cost, 53}, {damage, 4}],
+    drain => [{cost, 73}, {damage, 2}, {heal, 2}],
+    shield => [{cost, 113}, {effect, 6}, {armor, 7}],
+    poison => [{cost, 173}, {effect, 6}, {damage, 3}],
+    recharge => [{cost, 229}, {effect, 5}, {mana, 101}]}.

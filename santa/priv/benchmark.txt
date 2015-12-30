@@ -1,37 +1,37 @@
-timer:tc(santa, day_1a,  []). -> {       92,138}
-timer:tc(santa, day_1b,  []). -> {       90,1771}
-timer:tc(santa, day_2a,  []). -> {      785,1588178}
-timer:tc(santa, day_2b,  []). -> {      640,3783758}
-timer:tc(santa, day_3a,  []). -> {   131126,2592}
-timer:tc(santa, day_3b,  []). -> {   113020,2360}
-timer:tc(santa, day_4a,  []). -> {   852646,282749}
-timer:tc(santa, day_4b,  []). -> { 30803012,9962624}
-timer:tc(santa, day_5a,  []). -> {     2056,255}
-timer:tc(santa, day_5b,  []). -> {     3358,55}
-timer:tc(santa, day_6a,  []). -> {232122919,543903}
-timer:tc(santa, day_6b,  []). -> { 89595543,14687245}
-timer:tc(santa, day_7a,  []). -> {     1290,956}
-timer:tc(santa, day_7b,  []). -> {      901,40149}
-timer:tc(santa, day_8a,  []). -> {      106,1350}
-timer:tc(santa, day_8b,  []). -> {      120,2085}
-timer:tc(santa, day_9a,  []). -> {   270005,207}
-timer:tc(santa, day_9b,  []). -> {   268088,804}
-timer:tc(santa, day_10a, []). -> {  1833032,329356}
-timer:tc(santa, day_10b, []). -> { 26918876,4666278}
-timer:tc(santa, day_11a, []). -> {    75531,"vzbxxyzz"}
-timer:tc(santa, day_11b, []). -> {   307978,"vzcaabcc"}
-timer:tc(santa, day_12a, []). -> {     1849,191164}
-timer:tc(santa, day_12b, []). -> {    10129,87842}
-timer:tc(santa, day_13a, []). -> {   122896,709}
-timer:tc(santa, day_13b, []). -> {  1270446,668}
-timer:tc(santa, day_14a, []). -> {      129,2640}
-timer:tc(santa, day_14b, []). -> {     9148,1102}
-timer:tc(santa, day_15a, []). -> {  1020592,18965440}
-timer:tc(santa, day_15b, []). -> {   865932,15862900}
-timer:tc(santa, day_16a, []). -> {     4012,"103"}
-timer:tc(santa, day_16b, []). -> {     3703,"405"}
-timer:tc(santa, day_17a, []). -> {   498154,654}
-timer:tc(santa, day_17b, []). -> {   759019,57}
+timer:tc(santa, day_1a,  []). -> {       92,138} /mac
+timer:tc(santa, day_1b,  []). -> {       90,1771} /mac
+timer:tc(santa, day_2a,  []). -> {      785,1588178} /mac
+timer:tc(santa, day_2b,  []). -> {      640,3783758} /mac
+timer:tc(santa, day_3a,  []). -> {   131126,2592} /mac
+timer:tc(santa, day_3b,  []). -> {   113020,2360} /mac
+timer:tc(santa, day_4a,  []). -> {   852646,282749} /mac
+timer:tc(santa, day_4b,  []). -> { 30803012,9962624} /mac
+timer:tc(santa, day_5a,  []). -> {     2056,255} /mac
+timer:tc(santa, day_5b,  []). -> {     3358,55} /mac
+timer:tc(santa, day_6a,  []). -> {232122919,543903} /mac
+timer:tc(santa, day_6b,  []). -> { 89595543,14687245} /mac
+timer:tc(santa, day_7a,  []). -> {     1290,956} /mac
+timer:tc(santa, day_7b,  []). -> {      901,40149} /mac
+timer:tc(santa, day_8a,  []). -> {      106,1350} /mac
+timer:tc(santa, day_8b,  []). -> {      120,2085} /mac
+timer:tc(santa, day_9a,  []). -> {   270005,207} /mac
+timer:tc(santa, day_9b,  []). -> {   268088,804} /mac
+timer:tc(santa, day_10a, []). -> {  1833032,329356} /mac
+timer:tc(santa, day_10b, []). -> { 26918876,4666278} /mac
+timer:tc(santa, day_11a, []). -> {    75531,"vzbxxyzz"} /mac
+timer:tc(santa, day_11b, []). -> {   307978,"vzcaabcc"} /mac
+timer:tc(santa, day_12a, []). -> {     1849,191164} /mac
+timer:tc(santa, day_12b, []). -> {    10129,87842} /mac
+timer:tc(santa, day_13a, []). -> {   122896,709} /mac
+timer:tc(santa, day_13b, []). -> {  1270446,668} /mac
+timer:tc(santa, day_14a, []). -> {      129,2640} /mac
+timer:tc(santa, day_14b, []). -> {     9148,1102} /mac
+timer:tc(santa, day_15a, []). -> {  1020592,18965440} /mac
+timer:tc(santa, day_15b, []). -> {   865932,15862900} /mac
+timer:tc(santa, day_16a, []). -> {     4012,"103"} /mac
+timer:tc(santa, day_16b, []). -> {     3703,"405"} /mac
+timer:tc(santa, day_17a, []). -> {   498154,654} /mac
+timer:tc(santa, day_17b, []). -> {   759019,57} /mac
 timer:tc(santa, day_18a, []). -> { 63746091,1061} /pc
 timer:tc(santa, day_18b, []). -> { 63471718,1006} /pc
 timer:tc(santa, day_18a, []). -> {  1736666,1061} /mac
@@ -44,3 +44,7 @@ timer:tc(santa, day_20a, []). -> { 52404990,786240} /mac
 timer:tc(santa, day_20b, []). -> { 57940802,831600} /mac
 timer:tc(santa, day_21a, []). -> {       48,121} /pc
 timer:tc(santa, day_21b, []). -> {       48,201} /pc
+timer:tc(santa, day_21a, []). -> {      122,121} /mac
+timer:tc(santa, day_21b, []). -> {      145,201} /mac
+timer:tc(santa, day_22a, []). -> {  7975295,953} /mac
+timer:tc(santa, day_22b, []). -> {  8450911,1289} /mac
