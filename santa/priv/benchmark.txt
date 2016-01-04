@@ -48,5 +48,11 @@ timer:tc(santa, day_21a, []). -> {      122,121} /mac
 timer:tc(santa, day_21b, []). -> {      145,201} /mac
 timer:tc(santa, day_22a, []). -> {  7975295,953} /mac
 timer:tc(santa, day_22b, []). -> {  8450911,1289} /mac
+timer:tc(santa, day_22a, []). -> {  4082068,953} /pc
+timer:tc(santa, day_22b, []). -> {  4339246,1289} /pc
 timer:tc(santa, day_23a, []). -> {      852,307} /mac
 timer:tc(santa, day_23b, []). -> {      566,160} /mac
+timer:tc(santa, day_23a, []). -> {      902,307} /pc
+timer:tc(santa, day_23b, []). -> {      140,160} /pc
+timer:tc(santa, day_24a, []). -> {  8982467,11846773891} /pc
+timer:tc(santa, day_24b, []). -> {  1540492,80393059} /pc
