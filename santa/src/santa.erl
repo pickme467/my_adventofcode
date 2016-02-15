@@ -261,18 +261,12 @@ get_command_and_coordinates(Line) ->
   {From, To} = get_coordinates(InputWithoutCommand),
   {Command, From, To}.
 
-get_command(Input) ->
-  case lists:prefix("turn on ", Input) of
-    true ->
-      {turn_on, lists:subtract(Input, "turn on ")};
-    false ->
-      case lists:prefix("turn off", Input) of
-        true ->
-          {turn_off, lists:subtract(Input, "turn off ")};
-        false ->
-          {toggle, lists:subtract(Input, "toggle ")}
-      end
-  end.
+get_command("turn on " ++ Input) ->
+  {turn_on, Input};
+get_command("turn off " ++ Input) ->
+  {turn_off, Input};
+get_command("toggle " ++ Input) ->
+  {toggle, Input}.
 
 get_coordinates(Input) ->
   Tokens = string:tokens(Input, ", "),
