@@ -76,3 +76,20 @@ day_2b_acceptance_test_() ->
                                                 "UUUUD"]))
   , ?_assertEqual([6, 7, $B, $B, 9], santa:day_2b())
   ].
+
+day_3a_test_() ->
+  [ ?_assertEqual(1, santa:find_triangles(["2 3 4"]))
+  , ?_assertEqual(1, santa:find_triangles(["2 3 4", "2 3 5"]))
+  ].
+
+day_3a_acceptance_test_() ->
+  ?_assertEqual(1050, santa:day_3a()).
+
+day_3b_test_() ->
+  [ ?_assertEqual(1, santa:find_triangles_vertically(["2", "2", "1",
+                                                      "3", "3", "2",
+                                                      "4", "5", "3"]))
+  ].
+
+day_3b_acceptance_test_() ->
+  ?_assertEqual(1921, santa:day_3b()).
