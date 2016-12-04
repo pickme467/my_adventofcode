@@ -35,3 +35,28 @@ day_1b_acceptance_test_() ->
   [ ?_assertEqual(4, santa:calculate_distance("R8, R4, R4, R8"))
   , ?_assertEqual(153, santa:day_1b())
   ].
+
+day_2a_test_() ->
+  [ ?_assertEqual(4, santa:next_key(5, "L"))
+  , ?_assertEqual(5, santa:next_key(6, "L"))
+  , ?_assertEqual(2, santa:next_key(3, "L"))
+  , ?_assertEqual(1, santa:next_key(2, "L"))
+  , ?_assertEqual(1, santa:next_key(1, "L"))
+  , ?_assertEqual(1, santa:next_key(4, "U"))
+  , ?_assertEqual(2, santa:next_key(5, "U"))
+  , ?_assertEqual(3, santa:next_key(3, "U"))
+  , ?_assertEqual(6, santa:next_key(3, "D"))
+  , ?_assertEqual(3, santa:next_key(2, "R"))
+  , ?_assertEqual([5], santa:decipher_code(5, ["LR"]))
+  , ?_assertEqual([2], santa:decipher_code(2, ["LR"]))
+  , ?_assertEqual([3], santa:decipher_code(2, ["RRR"]))
+  , ?_assertEqual([3, 6], santa:decipher_code(2, ["RRR", "D"]))
+  ].
+
+day_2a_acceptance_test_() ->
+  [ ?_assertEqual([1, 9, 8, 5], santa:decipher_code(5, ["ULL",
+                                                        "RRDDD",
+                                                        "LURDL",
+                                                        "UUUUD"]))
+  , ?_assertEqual([1,8,8,4,3], santa:day_2a())
+  ].
