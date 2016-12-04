@@ -1,6 +1,6 @@
 -module(santa).
 
--export([day_1b/0, day_2a/0]).
+-export([day_1b/0, day_2a/0, day_2b/0]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -90,17 +90,18 @@ day_2a() ->
   decipher_code(5, string:tokens(day_2a_input(), "\n")).
 
 decipher_code(Key, Recipe) ->
-  decipher_code(Key, Recipe, []).
+  decipher_code(Key, Recipe, fun next_key/2).
 
-decipher_code(_, [], Result) ->
+decipher_code(Key, Recipe, KeypadFunction) ->
+  decipher_code(Key, Recipe, [], KeypadFunction).
+
+decipher_code(_, [], Result, _) ->
   lists:reverse(Result);
-decipher_code(Start, [Lines | Rest], Result) ->
+decipher_code(Start, [Lines | Rest], Result, KeypadFunction) ->
   FoundKey = lists:foldl(fun (Direction, Key) ->
-                  next_key(Key, [Direction])
+                  KeypadFunction(Key, [Direction])
               end, Start, Lines),
-  decipher_code(FoundKey, Rest, [FoundKey] ++ Result).
-
-
+  decipher_code(FoundKey, Rest, [FoundKey] ++ Result, KeypadFunction).
 
 next_key(X, "L") ->
   match_key_with_allowed(X, [3, 2, 6, 5, 9, 8], -1);
@@ -116,6 +117,39 @@ match_key_with_allowed(X, Allowed, ValueToAdd) ->
     true -> X + ValueToAdd;
     false -> X
   end.
+
+day_2b() ->
+  decipher_code_weird(5, string:tokens(day_2a_input(), "\n")).
+
+decipher_code_weird(Start, Recipe) ->
+  decipher_code(Start, Recipe, fun next_key_weird_keyboard/2).
+
+next_key_weird_keyboard(X, "L") ->
+  match_key_with_allowed(X, [3, 4, 6, 7, 8, 9, $B, $C], -1);
+next_key_weird_keyboard(X, "R") ->
+  match_key_with_allowed(X, [2, 3, 5, 6, 7, 8, $A, $B], 1);
+next_key_weird_keyboard(X, "U") ->
+  MovesUp = #{
+    $A => 6,
+    6  => 2,
+    $D => $B,
+    $B => 7,
+    7  => 3,
+    3  => 1,
+    $C => 8,
+    8  => 4},
+  maps:get(X, MovesUp, X);
+next_key_weird_keyboard(X, "D") ->
+  MovesUp = #{
+    2  => 6,
+    6  => $A,
+    1  => 3,
+    3  => 7,
+    7  => $B,
+    $B => $D,
+    4  => 8,
+    8  => $C},
+  maps:get(X, MovesUp, X).
 
 %% Inputs
 

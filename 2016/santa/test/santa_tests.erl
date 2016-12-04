@@ -51,6 +51,13 @@ day_2a_test_() ->
   , ?_assertEqual([2], santa:decipher_code(2, ["LR"]))
   , ?_assertEqual([3], santa:decipher_code(2, ["RRR"]))
   , ?_assertEqual([3, 6], santa:decipher_code(2, ["RRR", "D"]))
+  , ?_assertEqual(5, santa:next_key_weird_keyboard(5, "L"))
+  , ?_assertEqual($A, santa:next_key_weird_keyboard($B, "L"))
+  , ?_assertEqual($A, santa:next_key_weird_keyboard($B, "L"))
+  , ?_assertEqual(6, santa:next_key_weird_keyboard(5, "R"))
+  , ?_assertEqual(5, santa:next_key_weird_keyboard(5, "U"))
+  , ?_assertEqual($B, santa:next_key_weird_keyboard($D, "U"))
+  , ?_assertEqual($D, santa:next_key_weird_keyboard($B, "D"))
   ].
 
 day_2a_acceptance_test_() ->
@@ -59,4 +66,13 @@ day_2a_acceptance_test_() ->
                                                         "LURDL",
                                                         "UUUUD"]))
   , ?_assertEqual([1,8,8,4,3], santa:day_2a())
+  ].
+
+day_2b_acceptance_test_() ->
+  [ ?_assertEqual([5, $D, $B, 3],
+                  santa:decipher_code_weird(5, ["ULL",
+                                                "RRDDD",
+                                                "LURDL",
+                                                "UUUUD"]))
+  , ?_assertEqual([6, 7, $B, $B, 9], santa:day_2b())
   ].
