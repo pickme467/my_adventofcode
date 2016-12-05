@@ -14,3 +14,7 @@ erl_crash.dump
 logs
 _build
 .idea
+_rel
+_deps
+_plugins
+_tdeps

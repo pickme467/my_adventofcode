@@ -2,8 +2,22 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-% skipped test warning suppression
-%-export([day_1b_acceptance_test_skip/0]).
+day_1a_test_() ->
+  [ ?_assertEqual(1, santa:get_distance("R1"))
+  , ?_assertEqual(2, santa:get_distance("R2"))
+  , ?_assertEqual(1, santa:get_distance("L1"))
+  , ?_assertEqual(2, santa:get_distance("R1, R1"))
+  , ?_assertEqual(1, santa:get_distance("R1, R1, R1"))
+  , ?_assertEqual(0, santa:get_distance("R1, R1, R1, R1"))
+  , ?_assertEqual(1, santa:get_distance("L1, L1, L1"))
+  , ?_assertEqual(0, santa:get_distance("L1, L1, L1, L1"))
+  ].
+
+day_1a_acceptance_test_() ->
+  [ ?_assertEqual(5, santa:get_distance("R2, L3"))
+  , ?_assertEqual(2, santa:get_distance("R2, R2, R2"))
+  , ?_assertEqual(12, santa:get_distance("R5, L5, R5, R3"))
+  ].
 
 day_1b_test_() ->
   [ ?_assertEqual([{1, 0}], santa:walk({north, {0, 0}}, "R1"))

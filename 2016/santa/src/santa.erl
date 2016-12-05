@@ -1,11 +1,40 @@
 -module(santa).
 
--export([day_1b/0, day_2a/0, day_2b/0, day_3a/0, day_3b/0]).
+-export([day_1a/0, day_1b/0, day_2a/0, day_2b/0, day_3a/0, day_3b/0]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 -compile(export_all).
 -endif.
+
+day_1a() ->
+  get_distance(day_1a_input()).
+
+get_distance(List) ->
+  {_FinalDirection, {FinalSumX, FinalSumY}} =
+    lists:foldl(
+      fun(Input, FractionState) ->
+          make_new_coordinates(FractionState, Input)
+      end,
+      {north, {0, 0}}, string:tokens(List, ", ")),
+  abs(FinalSumX) + abs(FinalSumY).
+
+make_new_coordinates({north, {X, Y}}, [$R  | Num]) ->
+  {east, {X + list_to_integer(Num), Y}};
+make_new_coordinates({east, {X, Y}}, [$R  | Num]) ->
+  {south, {X, Y + list_to_integer(Num)}};
+make_new_coordinates({south, {X, Y}}, [$R  | Num]) ->
+  {west, {X - list_to_integer(Num), Y}};
+make_new_coordinates({west, {X, Y}}, [$R  | Num]) ->
+  {north, {X, Y - list_to_integer(Num)}};
+make_new_coordinates({north, {X, Y}}, [$L  | Num]) ->
+  {west, {X - list_to_integer(Num), Y}};
+make_new_coordinates({west, {X, Y}}, [$L  | Num]) ->
+  {south, {X, Y + list_to_integer(Num)}};
+make_new_coordinates({south, {X, Y}}, [$L  | Num]) ->
+  {east, {X + list_to_integer(Num), Y}};
+make_new_coordinates({east, {X, Y}}, [$L  | Num]) ->
+  {north, {X, Y - list_to_integer(Num)}}.
 
 day_1b() ->
   calculate_distance(day_1a_input()).
