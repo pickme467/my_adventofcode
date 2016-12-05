@@ -2,6 +2,10 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+% skipping long test (with skip word),
+% line below prevents compilation warnings
+-export([day_5a_test_skip/0, day_5b_test_skip/0]).
+
 day_1a_test_() ->
   [ ?_assertEqual(1, santa:get_distance("R1"))
   , ?_assertEqual(2, santa:get_distance("R2"))
@@ -136,3 +140,9 @@ day_4b_test_() ->
 
 day_4b_acceptance_test_() ->
   ?_assertEqual(993, santa:day_4b()).
+
+day_5a_test_skip() ->
+  {timeout, 300, ?_assertEqual("2414BC77", santa:day_5a())}.
+
+day_5b_test_skip() ->
+  {timeout, 500, ?_assertEqual("437E60FC", santa:day_5b())}.
