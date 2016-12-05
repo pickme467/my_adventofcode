@@ -107,3 +107,32 @@ day_3b_test_() ->
 
 day_3b_acceptance_test_() ->
   ?_assertEqual(1921, santa:day_3b()).
+
+day_4a_test_() ->
+  [ ?_assertEqual("a", santa:decipher("a"))
+  , ?_assertEqual("ab", santa:decipher("ab"))
+  , ?_assertEqual("ba", santa:decipher("abb"))
+  , ?_assertEqual("cba", santa:decipher("cccabb"))
+  , ?_assertEqual("cbad", santa:decipher("cccdabb"))
+  , ?_assertEqual("cbade", santa:decipher("cccdabbefg"))
+  , ?_assertEqual({"a-b-c-", "123", "ala"}, santa:split_input("a-b-c-123[ala]"))
+  ].
+
+day_4a_acceptance_test_() ->
+  [ ?_assertEqual("abxyz", santa:decipher("aaaaa-bbb-z-y-x-"))
+  , ?_assertEqual("abcde", santa:decipher("a-b-c-d-e-f-g-h-"))
+  , ?_assertEqual("oarel", santa:decipher("not-a-real-room-"))
+  , ?_assertNotEqual("decoy", santa:decipher("totally-real-room-"))
+  , ?_assertEqual(158835, santa:day_4a())
+  ].
+
+day_4b_test_() ->
+  [ ?_assertEqual("a", santa:rotate("a", 0))
+  , ?_assertEqual("b", santa:rotate("a", 1))
+  , ?_assertEqual("a", santa:rotate("z", 1))
+  , ?_assertEqual("aa", santa:rotate("zz", 1))
+  , ?_assertEqual("very", santa:rotate("qzmt", 343))
+  ].
+
+day_4b_acceptance_test_() ->
+  ?_assertEqual(993, santa:day_4b()).
