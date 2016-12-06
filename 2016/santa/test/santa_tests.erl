@@ -146,3 +146,14 @@ day_5a_test_skip() ->
 
 day_5b_test_skip() ->
   {timeout, 500, ?_assertEqual("437E60FC", santa:day_5b())}.
+
+day_6a_test_() ->
+  [ ?_assertEqual(["a", "b"], santa:make_vertical("ab"))
+  , ?_assertEqual(["ca", "b"], santa:make_vertical("ab\nc"))
+  ].
+
+day_6a_acceptance_test_() ->
+  ?_assertEqual("kqsdmzft", santa:day_6a()).
+
+day_6b_acceptance_test_() ->
+  ?_assertEqual("tpooccyo", santa:day_6b()).
