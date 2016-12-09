@@ -157,3 +157,41 @@ day_6a_acceptance_test_() ->
 
 day_6b_acceptance_test_() ->
   ?_assertEqual("tpooccyo", santa:day_6b()).
+
+day_7a_test_() ->
+  [ ?_assertNot(santa:is_tls("abcd"))
+  , ?_assertNot(santa:is_tls("abcde"))
+  , ?_assert(santa:is_tls("abba"))
+  , ?_assertNot(santa:is_tls("aaaa"))
+  , ?_assert(santa:is_tls("aabba"))
+  , ?_assertEqual([{normal, "aabba"}], santa:split_tls_input("aabba"))
+  , ?_assertEqual([{normal, "a"}], santa:split_tls_input("a"))
+  , ?_assertEqual([{tls, "aabba"}], santa:split_tls_input("[aabba]"))
+  , ?_assertEqual([{tls, "a"}, {normal, "b"}], santa:split_tls_input("[a]b"))
+  , ?_assertEqual([{tls, "a"}, {normal, "b"}, {tls, "c"}], santa:split_tls_input("[a]b[c]"))
+  ].
+
+day_7a_aceptance_test_() ->
+  [ ?_assertEqual(1, santa:analyze_address("abba[mnop]qrst"))
+  , ?_assertEqual(0, santa:analyze_address("abcd[bddb]xyyx"))
+  , ?_assertEqual(0, santa:analyze_address("aaaa[qwer]tyui"))
+  , ?_assertEqual(1, santa:analyze_address("ioxxoj[asdfgh]zxcvbn"))
+  , ?_assertEqual(115, santa:day_7a())
+  ].
+
+day_7b_test_() ->
+  [ ?_assertEqual([], santa:find_aba_bab("abc"))
+  , ?_assertEqual([{aba, ["aba"]}], santa:find_aba_bab("aba"))
+  , ?_assertEqual([{bab, ["aba"]}], santa:find_aba_bab("[aba]"))
+  , ?_assertEqual([{bab, ["aba", "aca"]}], santa:find_aba_bab("[aba][aca]"))
+  , ?_assertEqual(false, santa:is_aba_bab("[aba][aca]"))
+  , ?_assertEqual(true, santa:is_aba_bab("[aba][aca]bab"))
+  ].
+
+day_7b_acceptance_test_() ->
+  [ ?_assertEqual(true, santa:is_aba_bab("aba[bab]xyz"))
+  , ?_assertEqual(false, santa:is_aba_bab("xyx[xyx]xyx"))
+  , ?_assertEqual(true, santa:is_aba_bab("aba[bab]xyzaaa[kek]eke"))
+  , ?_assertEqual(true, santa:is_aba_bab("zazbz[bzb]cdb"))
+  , ?_assertEqual(231, santa:day_7b())
+  ].
