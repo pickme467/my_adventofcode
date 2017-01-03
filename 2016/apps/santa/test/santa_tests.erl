@@ -4,7 +4,8 @@
 
 % skipping long test (with skip word),
 % line below prevents compilation warnings
--export([day_5a_test_skip/0, day_5b_test_skip/0]).
+-export([day_5a_test_skip/0, day_5b_test_skip/0,
+         day_9b_acceptance_test_skip/0]).
 
 day_1a_test_() ->
   [ ?_assertEqual(1, santa:get_distance("R1"))
@@ -234,3 +235,36 @@ day_8b_acceptance_test_() ->
                   0,1,0,0,1,0,1,0,0,1,0,1,0,0,0,0,1,0,0,1,0],
                  [1,1,1,1,0,1,0,0,0,0,1,0,0,1,0,1,0,0,0,0,1,1,1,0,0,1,0,0,0,
                   0,0,1,1,0,0,0,1,1,1,0,1,0,0,0,0,0,1,1,0,0]], santa:day_8b()).
+
+day_9a_test_() ->
+  [ ?_assertEqual({"U", "P"}, santa:decode_directive("(1x1)UP"))
+  , ?_assertEqual("UP", santa:traverse_repeat("(1x1)UP", []))
+  , ?_assertEqual("UUUP", santa:traverse_repeat("(1x3)UP", []))
+  , ?_assertEqual(6, length(santa:traverse_repeat("ADVENT", [])))
+  , ?_assertEqual(7, length(santa:traverse_repeat("A(1x5)BC", [])))
+  , ?_assertEqual(9, length(santa:traverse_repeat("(3x3)XYZ", [])))
+  , ?_assertEqual(11, length(santa:traverse_repeat("A(2x2)BCD(2x2)EFG", [])))
+  , ?_assertEqual(6, length(santa:traverse_repeat("(6x1)(1x3)A", [])))
+  , ?_assertEqual(18, length(santa:traverse_repeat("X(8x2)(3x3)ABCY", [])))
+  , ?_assertEqual("X(3x3)ABC(3x3)ABCY",
+                  santa:traverse_repeat("X(8x2)(3x3)ABCY", []))
+  ].
+
+day_9a_acceptance_test_() ->
+  ?_assertEqual(97714, santa:day_9a()).
+
+day_9b_test_() ->
+  [ ?_assertEqual(length("XABCABCABCABCABCABCY"),
+                 santa:traverse_repeat_intensive("X(8x2)(3x3)ABCY", [], 0))
+  , {timeout, 5000, ?_assertEqual(445,
+                  santa:traverse_repeat_intensive(
+                    "(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN",
+                    [], 0))}
+  , ?_assertEqual(241920,
+                  santa:traverse_repeat_intensive(
+                    "(27x12)(20x12)(13x14)(7x10)(1x12)A",
+                    [], 0))
+  ].
+
+day_9b_acceptance_test_skip() ->
+  {timeout, 10000, ?_assertEqual(10762972461, santa:day_9b())}.
