@@ -268,3 +268,29 @@ day_9b_test_() ->
 
 day_9b_acceptance_test_skip() ->
   {timeout, 10000, ?_assertEqual(10762972461, santa:day_9b())}.
+
+day_10a_test_() ->
+  [ ?_assertEqual({value, 10, 15}, santa:decode_bot("value 10 goes to bot 15"))
+  , ?_assertEqual(
+       {{bot, 35}, {bot, 24}, {bot, 187}},
+       santa:decode_bot("bot 35 gives low to bot 24 and high to bot 187"))
+  , ?_assertEqual(
+       {{bot, 35}, {output, 0}, {bot, 187}},
+       santa:decode_bot("bot 35 gives low to output 0 and high to bot 187"))
+  , ?_assertMatch(
+       {[{{bot, 35}, {output, 0}, {bot, 187}}], _},
+       santa:build_machine("bot 35 gives low to output 0 and high to bot 187"))
+  , ?_assertMatch(
+       {_, [{10, {bot, 15}}]},
+       santa:build_machine("value 10 goes to bot 15"))
+  , ?_assertEqual(
+       {[{{bot, 35}, {output, 0}, {bot, 187}}], [{10, {bot, 15}}]},
+       santa:build_machine("bot 35 gives low to output 0 and high to bot 187\n"
+                           "value 10 goes to bot 15"))
+  ].
+
+day_10a_acceptance_test_() ->
+  {timeout, 10000, ?_assertEqual([118], santa:day_10a())}.
+
+day_10b_acceptance_test_() ->
+  {timeout, 10000, ?_assertEqual(143153, santa:day_10b())}.
