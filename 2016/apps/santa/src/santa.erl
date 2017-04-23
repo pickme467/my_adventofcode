@@ -652,9 +652,9 @@ find_bot(HandledValue) ->
 
 day_10b() ->
   execute_bot_algorithm(),
-  find_output123().
+  find_output012().
 
-find_output123() ->
+find_output012() ->
   Outputs = output_bot:get_outputs(),
   [A | _] = maps:get(0, Outputs),
   [B | _] = maps:get(1, Outputs),
