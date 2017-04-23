@@ -594,7 +594,9 @@ traverse_repeat_intensive([_C |  Rest], Partial, Result) ->
 
 day_10a() ->
   execute_bot_algorithm(),
-  find_bot({17, 61}).
+  FoundBot = find_bot({17, 61}),
+  bot_sup:stop(),
+  FoundBot.
 
 execute_bot_algorithm() ->
   {Bots, Values} = build_machine(day_10a_input()),
@@ -652,7 +654,9 @@ find_bot(HandledValue) ->
 
 day_10b() ->
   execute_bot_algorithm(),
-  find_output012().
+  Output = find_output012(),
+  bot_sup:stop(),
+  Output.
 
 find_output012() ->
   Outputs = output_bot:get_outputs(),

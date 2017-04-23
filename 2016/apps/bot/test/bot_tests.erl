@@ -12,8 +12,8 @@ bot_test_() ->
        [
         {"Making bot",
          fun() ->
-             {ok, _Bot} = bot_sup:make_bot({{bot, 99998},
-                                            {bot, 99999}, {output, 1}})
+             {ok, _Bot} = bot_sup:make_bot({{bot, 1},
+                                            {bot, 2}, {output, 1}})
          end}
        , {"hand piece to output outputs to service",
           fun() ->
@@ -22,20 +22,20 @@ bot_test_() ->
           end}
        , {"hand piece to another bot",
           fun() ->
-              bot_sup:make_bot({{bot, 99998}, {bot, 99999}, {output, 99997}}),
-              register(bot:make_bot_name({bot, 99999}), self()),
-              bot:hand_piece(7, {bot, 99998}),
-              bot:hand_piece(8, {bot, 99998}),
+              bot_sup:make_bot({{bot, 1}, {bot, 2}, {output, 1}}),
+              register(bot:make_bot_name({bot, 2}), self()),
+              bot:hand_piece(7, {bot, 1}),
+              bot:hand_piece(8, {bot, 1}),
               {value, 7} = receive
                      {_GenSrv, Msg} -> Msg
                    after
                      500 -> timeout
                    end,
-              {99998, [{7, 8}]} = bot:history({bot, 99998}),
-              bot:hand_piece(2, {bot, 99998}),
-              bot:hand_piece(1, {bot, 99998}),
+              {1, [{7, 8}]} = bot:history({bot, 1}),
+              bot:hand_piece(2, {bot, 1}),
+              bot:hand_piece(1, {bot, 1}),
               receive _Any -> ok after 500 -> ok end,
-              {99998, [{1, 2}, {7, 8}]} = bot:history({bot, 99998})
+              {1, [{1, 2}, {7, 8}]} = bot:history({bot, 1})
           end}
        ]
     end}.
