@@ -290,7 +290,44 @@ day_10a_test_() ->
   ].
 
 day_10a_acceptance_test_() ->
-  {timeout, 10000, ?_assertEqual([118], santa:day_10a())}.
+  {timeout, 10000, ?_assertEqual(118, santa:day_10a())}.
 
 day_10b_acceptance_test_() ->
   {timeout, 10000, ?_assertEqual(143153, santa:day_10b())}.
+
+day_11a_test_() ->
+  [ ?_assert(santa:check_floor([]))
+  , ?_assert(santa:check_floor(["pog"]))
+  , ?_assert(santa:check_floor(["pom"]))
+  , ?_assert(santa:check_floor(["pog", "pom"]))
+  , ?_assert(santa:check_floor(["pog", "prg"]))
+  , ?_assert(santa:check_floor(["rum", "pom"]))
+  , ?_assert(santa:check_floor(["rug", "pog", "pom"]))
+  , ?_assert(santa:check_floor(["rug", "pog", "pom", "rum"]))
+  , ?_assert(santa:check_floor(["rug", "pog", "pom", "cog"]))
+  , ?_assert(santa:check_floor(["rug", "pog", "cog"]))
+  , ?_assert(santa:check_floor(["rum", "pom", "com"]))
+  , ?_assertNot(santa:check_floor(["rug", "pog", "pom", "com"]))
+  , ?_assert(santa:is_valid(santa:day_11_input()))
+  , ?_assertEqual([], santa:generate_elevator_content([]))
+  , ?_assertEqual([["pom"]], santa:generate_elevator_content(["pom"]))
+  , ?_assertEqual(lists:sort([["pom"], ["pog"], ["pom", "pog"]]),
+                  lists:sort(santa:generate_elevator_content(["pom", "pog"])))
+  , ?_assertEqual(
+       lists:sort([["pom"], ["pog"], ["cog"], ["pom", "pog"],
+                   ["pom", "cog"], ["pog", "cog"]]),
+       lists:sort(santa:generate_elevator_content(["cog", "pom", "pog"])))
+  , ?_assertEqual(
+       lists:sort([["pog", "abg"]]),
+       lists:sort(santa:make_new_floor(["pog"], [["abg"], ["efm"]])))
+  , ?_assertEqual(
+       lists:sort([["pog", "abg"], ["pog", "cem", "ceg"]]),
+       lists:sort(santa:make_new_floor(["pog"],
+                                       [["abg"], ["efm"], ["cem", "ceg"]])))
+  ].
+
+  %% {{elevator, 1},
+  %%  [{1, [pog, thg, thm, prg, rug, rum, cog, com]},
+  %%   {2, [pom, prm]},
+  %%   {3, []},
+  %%   {4, []}]}.

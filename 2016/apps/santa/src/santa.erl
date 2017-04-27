@@ -9,7 +9,8 @@
          day_7a/0, day_7b/0,
          day_8a/0, day_8b/0,
          day_9a/0, day_9b/0,
-         day_10a/0, day_10b/0]).
+         day_10a/0, day_10b/0,
+         day_11a/0]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -596,7 +597,7 @@ day_10a() ->
   execute_bot_algorithm(),
   FoundBot = find_bot({17, 61}),
   bot_sup:stop(),
-  FoundBot.
+  hd(FoundBot).
 
 execute_bot_algorithm() ->
   {Bots, Values} = build_machine(day_10a_input()),
@@ -665,8 +666,72 @@ find_output012() ->
   [C | _] = maps:get(2, Outputs),
   A * B * C.
 
-%% Inputs
+day_11a() ->
+  is_valid(day_11_input()).
 
+is_valid({_Elevator, Floors}) ->
+  lists:foldl(fun (_FloorWithNumber, false) -> false;
+                  ({_FloorNumber, Floor}, true) ->
+                  check_floor(Floor)
+              end, true, Floors).
+
+check_floor(Floor) ->
+  check_crowded_floor(lists:sort(Floor), 0, []).
+
+check_crowded_floor([], 0, Alone) ->
+  all_generators(Alone) orelse all_modules(Alone);
+check_crowded_floor([], _Pairs, Alone)  ->
+  all_generators(Alone);
+check_crowded_floor([[A, B, _], [A, B, _] | Rest], Pairs, Alone) ->
+  check_crowded_floor(Rest, Pairs + 1, Alone);
+check_crowded_floor([Alone | Rest], Pairs, OtherAlone) ->
+  check_crowded_floor(Rest, Pairs, [Alone | OtherAlone]);
+check_crowded_floor(_, _, _) ->
+  false.
+
+all_generators(Alone) ->
+  all_same_type(Alone, $g).
+
+all_modules(Alone) ->
+  all_same_type(Alone, $m).
+
+all_same_type(Alone, Type) ->
+  lists:foldl(fun ([_, _, Letter], true) when Letter =:= Type ->
+                  true;
+                  (_, _) -> false
+              end, true, Alone).
+
+generate_elevator_content(List) ->
+  make_list_of_lists(List) ++ make_combination_of_pairs(List).
+
+make_list_of_lists(List) ->
+  lists:foldl(fun (Element, ListOfLists) ->
+                  [[Element] | ListOfLists]
+              end, [], List).
+
+make_combination_of_pairs(List) ->
+  [[A, B] || A <- List,
+             B <- List -- [A], A > B].
+
+make_new_floor(Floor, ElevatorContents) ->
+  [ Floor ++ E || E <- ElevatorContents, check_floor(Floor ++ E)].
+
+make_floors({{elevator, 1}, Floors}) ->
+  make_new_floor(get_floor(2, Floors),
+                 generate_elevator_content(get_floor(1, Floors)));
+make_floors({{elevator, 4}, Floors}) ->
+  make_new_floor(get_floor(3, Floors),
+                 generate_elevator_content(get_floor(4, Floors)));
+make_floors({{elevator, Level}, Floors}) ->
+  make_new_floor(get_floor(Level + 1, Floors),
+                 generate_elevator_content(get_floor(Level, Floors))) ++
+    make_new_floor(get_floor(Level - 1, Floors),
+                   generate_elevator_content(get_floor(Level, Floors))).
+
+get_floor(Index, List) ->
+  lists:nth(Index, List).
+
+%% Inputs
 day_1a_input() ->
   "R4, R3, R5, L3, L5, R2, L2, R5, L2, R5, R5, R5, R1, R3, L2, L2, L1, R5, L3, R1, L2, R1, L3, L5, L1, R3, L4, R2, R4, L3, L1, R4, L4, R3, L5, L3, R188, R4, L1, R48, L5, R4, R71, R3, L2, R188, L3, R2, L3, R3, L5, L1, R1, L2, L4, L2, R5, L3, R3, R3, R4, L3, L4, R5, L4, L4, R3, R4, L4, R1, L3, L1, L1, R4, R1, L4, R1, L1, L3, R2, L2, R2, L1, R5, R3, R4, L5, R2, R5, L5, R1, R2, L1, L3, R3, R1, R3, L4, R4, L4, L1, R1, L2, L2, L4, R1, L3, R4, L2, R3, L1, L5, R4, R5, R2, R5, R1, R5, R1, R3, L3, L2, L2, L5, R2, L2, R5, R5, L2, R3, L5, R5, L2, R4, R2, L1, R3, L5, R3, R2, R5, L1, R3, L2, R2, R1".
 
@@ -6745,3 +6810,14 @@ bot 83 gives low to bot 155 and high to bot 44
 bot 123 gives low to bot 33 and high to bot 195
 bot 183 gives low to bot 83 and high to bot 90
 bot 71 gives low to bot 152 and high to bot 121".
+
+%%The first floor contains a polonium generator, a thulium generator, a thulium-compatible microchip, a promethium generator, a ruthenium generator, a ruthenium-compatible microchip, a cobalt generator, and a cobalt-compatible microchip.
+%%The second floor contains a polonium-compatible microchip and a promethium-compatible microchip.
+%%The third floor contains nothing relevant.
+%%The fourth floor contains nothing relevant.
+day_11_input() ->
+  {{elevator, 1},
+   [{1, ["pog", "thg", "thm", "prg", "rug", "rum", "cog", "com"]},
+    {2, ["pom", "prm"]},
+    {3, []},
+    {4, []}]}.
