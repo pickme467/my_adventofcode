@@ -667,69 +667,15 @@ find_output012() ->
   A * B * C.
 
 day_11a() ->
-  is_valid(day_11_input()).
+  rooms:find_best_route(day_11_input()).
 
-is_valid({_Elevator, Floors}) ->
-  lists:foldl(fun (_FloorWithNumber, false) -> false;
-                  ({_FloorNumber, Floor}, true) ->
-                  check_floor(Floor)
-              end, true, Floors).
+sort_floor_content({Elevator, Floors}) ->
+    {Elevator, sort_floors(Floors, [])}.
 
-check_floor(Floor) ->
-  check_crowded_floor(lists:sort(Floor), 0, []).
-
-check_crowded_floor([], 0, Alone) ->
-  all_generators(Alone) orelse all_modules(Alone);
-check_crowded_floor([], _Pairs, Alone)  ->
-  all_generators(Alone);
-check_crowded_floor([[A, B, _], [A, B, _] | Rest], Pairs, Alone) ->
-  check_crowded_floor(Rest, Pairs + 1, Alone);
-check_crowded_floor([Alone | Rest], Pairs, OtherAlone) ->
-  check_crowded_floor(Rest, Pairs, [Alone | OtherAlone]);
-check_crowded_floor(_, _, _) ->
-  false.
-
-all_generators(Alone) ->
-  all_same_type(Alone, $g).
-
-all_modules(Alone) ->
-  all_same_type(Alone, $m).
-
-all_same_type(Alone, Type) ->
-  lists:foldl(fun ([_, _, Letter], true) when Letter =:= Type ->
-                  true;
-                  (_, _) -> false
-              end, true, Alone).
-
-generate_elevator_content(List) ->
-  make_list_of_lists(List) ++ make_combination_of_pairs(List).
-
-make_list_of_lists(List) ->
-  lists:foldl(fun (Element, ListOfLists) ->
-                  [[Element] | ListOfLists]
-              end, [], List).
-
-make_combination_of_pairs(List) ->
-  [[A, B] || A <- List,
-             B <- List -- [A], A > B].
-
-make_new_floor(Floor, ElevatorContents) ->
-  [ Floor ++ E || E <- ElevatorContents, check_floor(Floor ++ E)].
-
-make_floors({{elevator, 1}, Floors}) ->
-  make_new_floor(get_floor(2, Floors),
-                 generate_elevator_content(get_floor(1, Floors)));
-make_floors({{elevator, 4}, Floors}) ->
-  make_new_floor(get_floor(3, Floors),
-                 generate_elevator_content(get_floor(4, Floors)));
-make_floors({{elevator, Level}, Floors}) ->
-  make_new_floor(get_floor(Level + 1, Floors),
-                 generate_elevator_content(get_floor(Level, Floors))) ++
-    make_new_floor(get_floor(Level - 1, Floors),
-                   generate_elevator_content(get_floor(Level, Floors))).
-
-get_floor(Index, List) ->
-  lists:nth(Index, List).
+sort_floors([], Floors) ->
+    lists:sort(Floors);
+sort_floors([{Number, FloorToSort} | Rest], Sorted) ->
+    sort_floors(Rest, [{Number, lists:sort(FloorToSort)} | Sorted]).
 
 %% Inputs
 day_1a_input() ->
