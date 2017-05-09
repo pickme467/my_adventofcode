@@ -667,15 +667,138 @@ find_output012() ->
   A * B * C.
 
 day_11a() ->
-  rooms:find_best_route(day_11_input()).
+  find_best_route(day_11_input()).
 
-sort_floor_content({Elevator, Floors}) ->
-    {Elevator, sort_floors(Floors, [])}.
+find_best_route(Setup) ->
+  find_wide([Setup], [], [Setup], 1).
 
-sort_floors([], Floors) ->
-    lists:sort(Floors);
-sort_floors([{Number, FloorToSort} | Rest], Sorted) ->
-    sort_floors(Rest, [{Number, lists:sort(FloorToSort)} | Sorted]).
+find_wide([], NextRow, History, Level) ->
+  io:format("New level: ~p, History: ~p~n", [Level + 1, length(History)]),
+  find_wide(NextRow, [], History, Level + 1);
+find_wide([Setup | Rest], NextRow, History, Level) ->
+  NewFloors = make_floors_with_history(Setup, History),
+  case is_any_final(NewFloors) of
+    true -> Level;
+    false -> find_wide(Rest, NewFloors ++ NextRow, NewFloors ++ History, Level)
+  end.
+
+make_floors_with_history(Setup, History) ->
+  lists:foldl(fun (NewSetup, FoundFloors) ->
+                  case lists:member(NewSetup, History) of
+                    true -> FoundFloors;
+                    false -> [NewSetup | FoundFloors]
+                  end
+              end, [], make_floors(Setup)).
+is_any_final([]) ->
+  false;
+is_any_final([Setup | Rest]) ->
+  case is_final(Setup) of
+    true ->
+      true;
+    false -> is_final(Rest)
+  end.
+
+is_final({{elevator, 4}, [{1, []}, {2, []}, {3, []}, {4, _All}]}) ->
+  true;
+is_final(_Other) -> false.
+
+is_valid({_Elevator, Floors}) ->
+  lists:foldl(fun (_FloorWithNumber, false) -> false;
+                  ({_FloorNumber, Floor}, true) ->
+                  check_floor(Floor)
+              end, true, Floors).
+
+check_floor(Floor) ->
+  check_crowded_floor(lists:sort(Floor), 0, []).
+
+check_crowded_floor([], 0, Alone) ->
+  all_generators(Alone) orelse all_modules(Alone);
+check_crowded_floor([], _Pairs, Alone)  ->
+  all_generators(Alone);
+check_crowded_floor([[A, B, _], [A, B, _] | Rest], Pairs, Alone) ->
+  check_crowded_floor(Rest, Pairs + 1, Alone);
+check_crowded_floor([Alone | Rest], Pairs, OtherAlone) ->
+  check_crowded_floor(Rest, Pairs, [Alone | OtherAlone]);
+check_crowded_floor(_, _, _) ->
+  false.
+
+all_generators(Alone) ->
+  all_same_type(Alone, $g).
+
+all_modules(Alone) ->
+  all_same_type(Alone, $m).
+
+all_same_type(Alone, Type) ->
+  lists:foldl(fun ([_, _, Letter], true) when Letter =:= Type ->
+                  true;
+                  (_, _) -> false
+              end, true, Alone).
+
+generate_elevator_content(List) ->
+  make_list_of_lists(List) ++ make_combination_of_pairs(List).
+
+make_list_of_lists(List) ->
+  lists:foldl(fun (Element, ListOfLists) ->
+                  [[Element] | ListOfLists]
+              end, [], List).
+
+make_combination_of_pairs(List) ->
+  [[A, B] || A <- List,
+             B <- List -- [A], A > B].
+
+make_new_floor_elevator_floor_set(Floor, ElevatorFloor, ElevatorContents) ->
+  [{lists:sort(Floor ++ E), ElevatorFloor -- E} ||
+    E <- ElevatorContents,
+    check_floor(Floor ++ E),
+    check_floor(ElevatorFloor -- E)].
+
+make_floors({{elevator, 1}, Floors}) ->
+  swap_floors(
+    [2, 1], Floors,
+    make_new_floor_elevator_floor_set(get_floor_content(2, Floors),
+                                      get_floor_content(1, Floors),
+                                      generate_elevator_content(
+                                        get_floor_content(1, Floors))));
+make_floors({{elevator, 4}, Floors}) ->
+  swap_floors(
+    [3, 4], Floors,
+    make_new_floor_elevator_floor_set(get_floor_content(3, Floors),
+                                      get_floor_content(4, Floors),
+                                      generate_elevator_content(
+                                        get_floor_content(4, Floors))));
+make_floors({{elevator, Level}, Floors}) ->
+  swap_floors(
+    [Level - 1, Level], Floors,
+    make_new_floor_elevator_floor_set(get_floor_content(Level - 1, Floors),
+                                      get_floor_content(Level, Floors),
+                                      generate_elevator_content(
+                                        get_floor_content(Level, Floors))))
+    ++
+    swap_floors(
+      [Level + 1, Level], Floors,
+      make_new_floor_elevator_floor_set(get_floor_content(Level + 1, Floors),
+                                        get_floor_content(Level, Floors),
+                                        generate_elevator_content(
+                                          get_floor_content(Level, Floors)))).
+
+get_floor_content(Index, List) ->
+  element(2, lists:nth(Index, lists:sort(List))).
+
+
+swap_floors([FloorIndex, ElevatorIndex], AllFloors, GeneratedPairs) ->
+  lists:map(fun({FloorContent, ElevatorContent}) ->
+                {{elevator, FloorIndex},
+                 lists:sort([{FloorIndex, FloorContent},
+                             {ElevatorIndex, ElevatorContent}]
+                            ++ get_other_floors([FloorIndex, ElevatorIndex],
+                                                AllFloors))}
+            end, GeneratedPairs).
+
+get_other_floors(List, AllFloors) ->
+  lists:foldl(fun (FloorIndex, OtherFloors) ->
+                  [{FloorIndex, get_floor_content(FloorIndex, AllFloors)}
+                   | OtherFloors]
+              end, [], lists:seq(1, 4) -- List).
 
 %% Inputs
 day_1a_input() ->

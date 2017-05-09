@@ -5,7 +5,7 @@
 % skipping long test (with skip word),
 % line below prevents compilation warnings
 -export([day_5a_test_skip/0, day_5b_test_skip/0,
-         day_9b_acceptance_test_skip/0]).
+         day_9b_acceptance_test_skip/0, day_11a_acceptance_test_skip/0]).
 
 day_1a_test_() ->
   [ ?_assertEqual(1, santa:get_distance("R1"))
@@ -294,3 +294,75 @@ day_10a_acceptance_test_() ->
 
 day_10b_acceptance_test_() ->
   {timeout, 20000, ?_assertEqual(143153, santa:day_10b())}.
+
+day_11a_test_() ->
+  [ ?_assert(santa:check_floor([]))
+  , ?_assert(santa:check_floor(["pog"]))
+  , ?_assert(santa:check_floor(["pom"]))
+  , ?_assert(santa:check_floor(["pog", "pom"]))
+  , ?_assert(santa:check_floor(["pog", "prg"]))
+  , ?_assert(santa:check_floor(["rum", "pom"]))
+  , ?_assert(santa:check_floor(["rug", "pog", "pom"]))
+  , ?_assert(santa:check_floor(["rug", "pog", "pom", "rum"]))
+  , ?_assert(santa:check_floor(["rug", "pog", "pom", "cog"]))
+  , ?_assert(santa:check_floor(["rug", "pog", "cog"]))
+  , ?_assert(santa:check_floor(["rum", "pom", "com"]))
+  , ?_assertNot(santa:check_floor(["rug", "pog", "pom", "com"]))
+  , ?_assert(santa:is_valid(santa:day_11_input()))
+  , ?_assertEqual([], santa:generate_elevator_content([]))
+  , ?_assertEqual([["pom"]], santa:generate_elevator_content(["pom"]))
+  , ?_assertEqual(lists:sort([["pom"], ["pog"], ["pom", "pog"]]),
+                  lists:sort(santa:generate_elevator_content(["pom", "pog"])))
+  , ?_assertEqual(
+       lists:sort([["pom"], ["pog"], ["cog"], ["pom", "pog"],
+                   ["pom", "cog"], ["pog", "cog"]]),
+       lists:sort(santa:generate_elevator_content(["cog", "pom", "pog"])))
+  , ?_assertEqual(lists:sort([{1, []}, {4, []}]),
+                  lists:sort(santa:get_other_floors([2, 3],
+                                                    [{4, []}, {3, []},
+                                                     {1, []}, {2, []}])))
+  , ?_assert(lists:all(fun (Setup) ->
+                           santa:is_valid(Setup)
+                       end, santa:make_floors(santa:day_11_input())))
+  , ?_assertEqual(7, length(santa:make_floors(santa:day_11_input())))
+  , ?_assertEqual([{{elevator,3},
+                    [{1,[a,b]},
+                     {2,[c,d]},
+                     {3,[floor,floor]},
+                     {4,[ele,ele]}]}],
+                  santa:swap_floors([3, 4],
+                                    [{1, [a, b]},
+                                     {2, [c, d]},
+                                     {3, []},
+                                     {4, []}], [{[floor, floor], [ele, ele]}]))
+  , ?_assertEqual([{["pom"], ["pog"]},{["pog"], ["pom"]}],
+                  santa:make_new_floor_elevator_floor_set(
+                    [], ["pom", "pog"],
+                    [["pom"], ["pog"]]))
+  , ?_assertEqual(3, santa:find_best_route({{elevator, 1},
+                                                          [{1, ["pom"]},
+                                                           {2, []},
+                                                           {3, []},
+                                                           {4, []}]}))
+  , ?_assertEqual(3,
+                  santa:find_best_route({{elevator, 1},
+                                         [{1, ["pom", "pog"]},
+                                          {2, []},
+                                          {3, []},
+                                          {4, []}]}))
+  , ?_assertEqual(9,
+                  santa:find_best_route({{elevator, 1},
+                                                [{1, ["pom", "pog", "teg"]},
+                                                 {2, []},
+                                                 {3, []},
+                                                 {4, []}]}))
+  , ?_assertEqual(11,
+                  santa:find_best_route({{elevator, 1},
+                                         [{1, ["ham", "lam"]},
+                                          {2, ["hag"]},
+                                          {3, ["lag"]},
+                                          {4, []}]}))
+  ].
+
+day_11a_acceptance_test_skip() ->
+  {timeout, 0, ?_assertEqual(47, santa:day_11a())}.
