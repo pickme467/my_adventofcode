@@ -2,10 +2,10 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-% skipping long test (with skip word),
-% line below prevents compilation warnings
+                                                % skipping long test (with skip word),
+                                                % line below prevents compilation warnings
 -export([day_5a_test_skip/0, day_5b_test_skip/0,
-         day_9b_acceptance_test_skip/0, day_11a_acceptance_test_skip/0]).
+         day_9b_acceptance_test_skip/0]).
 
 day_1a_test_() ->
   [ ?_assertEqual(1, santa:get_distance("R1"))
@@ -210,7 +210,7 @@ day_8a_test_() ->
   , ?_assertEqual(2, santa:count_lights(["rect 1x1", "rotate column x=0 by 1",
                                          "rect 1x1"]))
   , ?_assertEqual(1, hd(hd(santa:display(["rect 1x1", "rotate column x=0 by 1",
-                                         "rect 1x1"]))))
+                                          "rect 1x1"]))))
   ].
 
 day_8a_acceptance_test_() ->
@@ -255,11 +255,11 @@ day_9a_acceptance_test_() ->
 
 day_9b_test_() ->
   [ ?_assertEqual(length("XABCABCABCABCABCABCY"),
-                 santa:traverse_repeat_intensive("X(8x2)(3x3)ABCY", [], 0))
+                  santa:traverse_repeat_intensive("X(8x2)(3x3)ABCY", [], 0))
   , {timeout, 5000, ?_assertEqual(445,
-                  santa:traverse_repeat_intensive(
-                    "(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN",
-                    [], 0))}
+                                  santa:traverse_repeat_intensive(
+                                    "(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN",
+                                    [], 0))}
   , ?_assertEqual(241920,
                   santa:traverse_repeat_intensive(
                     "(27x12)(20x12)(13x14)(7x10)(1x12)A",
@@ -308,7 +308,7 @@ day_11a_test_() ->
   , ?_assert(santa:check_floor(["rug", "pog", "cog"]))
   , ?_assert(santa:check_floor(["rum", "pom", "com"]))
   , ?_assertNot(santa:check_floor(["rug", "pog", "pom", "com"]))
-  , ?_assert(santa:is_valid(santa:day_11_input()))
+  , ?_assert(santa:is_valid(santa:day_11a_input()))
   , ?_assertEqual([], santa:generate_elevator_content([]))
   , ?_assertEqual([["pom"]], santa:generate_elevator_content(["pom"]))
   , ?_assertEqual(lists:sort([["pom"], ["pog"], ["pom", "pog"]]),
@@ -323,8 +323,8 @@ day_11a_test_() ->
                                                      {1, []}, {2, []}])))
   , ?_assert(lists:all(fun (Setup) ->
                            santa:is_valid(Setup)
-                       end, santa:make_floors(santa:day_11_input())))
-  , ?_assertEqual(7, length(santa:make_floors(santa:day_11_input())))
+                       end, santa:make_floors(santa:day_11a_input())))
+  , ?_assertEqual(7, length(santa:make_floors(santa:day_11a_input())))
   , ?_assertEqual([{{elevator,3},
                     [{1,[a,b]},
                      {2,[c,d]},
@@ -339,30 +339,34 @@ day_11a_test_() ->
                   santa:make_new_floor_elevator_floor_set(
                     [], ["pom", "pog"],
                     [["pom"], ["pog"]]))
-  , ?_assertEqual(3, santa:find_best_route({{elevator, 1},
-                                                          [{1, ["pom"]},
-                                                           {2, []},
-                                                           {3, []},
-                                                           {4, []}]}))
   , ?_assertEqual(3,
                   santa:find_best_route({{elevator, 1},
                                          [{1, ["pom", "pog"]},
                                           {2, []},
                                           {3, []},
                                           {4, []}]}))
-  , ?_assertEqual(9,
-                  santa:find_best_route({{elevator, 1},
-                                                [{1, ["pom", "pog", "teg"]},
-                                                 {2, []},
-                                                 {3, []},
-                                                 {4, []}]}))
   , ?_assertEqual(11,
                   santa:find_best_route({{elevator, 1},
                                          [{1, ["ham", "lam"]},
                                           {2, ["hag"]},
                                           {3, ["lag"]},
                                           {4, []}]}))
+  , ?_assertMatch({{elevator, 1}, [{1,1}, {1,1}]},
+                  santa:normalize({{elevator, 1}, [{1, ["pom", "eom", "pog", "eog"]},
+                                                   {2, []},
+                                                   {3, []},
+                                                   {4, []}]}))
+  , ?_assertEqual({not_important, [{1,1}, {2, 3}]},
+                  santa:normalize([], not_important,
+                                  #{b => #{"m" => 2, "g" => 3},
+                                    a => #{"m" => 1, "g" => 1}}))
+  , ?_assertEqual({not_important, [{1,1}, {2, 3}]},
+                  santa:normalize([{1, ["pom", "pog"]}, {2, ["eam"]}, {3, ["eag"]}],
+                                  not_important, #{}))
   ].
 
-day_11a_acceptance_test_skip() ->
-  {timeout, 0, ?_assertEqual(47, santa:day_11a())}.
+day_11a_acceptance_test_() ->
+  {timeout, 2000, ?_assertEqual(47, santa:day_11a())}.
+
+day_11b_acceptance_test_() ->
+  {timeout, 20000, ?_assertEqual(71, santa:day_11b())}.

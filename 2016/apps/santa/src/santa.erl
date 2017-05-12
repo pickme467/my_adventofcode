@@ -10,7 +10,7 @@
          day_8a/0, day_8b/0,
          day_9a/0, day_9b/0,
          day_10a/0, day_10b/0,
-         day_11a/0]).
+         day_11a/0, day_11b/0]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -607,7 +607,7 @@ execute_bot_algorithm() ->
 
 decode_bot("value" ++ Rest) ->
   [Value, _Goes, _To, _Bot, BotNumber] = string:tokens(Rest, " "),
-    {value, list_to_integer(Value), list_to_integer(BotNumber)};
+  {value, list_to_integer(Value), list_to_integer(BotNumber)};
 decode_bot("bot" ++ Rest) ->
   [BotNumber, _Gives, _Low, _To, BotOrOutputLow, NumberLow,
    _And, _High, _To, BotOrOutputHigh, NumberHigh] = string:tokens(Rest, " "),
@@ -667,28 +667,32 @@ find_output012() ->
   A * B * C.
 
 day_11a() ->
-  find_best_route(day_11_input()).
+  find_best_route(day_11a_input()).
 
 find_best_route(Setup) ->
-  find_wide([Setup], [], [Setup], 1).
+  find_wide([Setup], [], [normalize(Setup)], 1).
 
 find_wide([], NextRow, History, Level) ->
-  io:format("New level: ~p, History: ~p~n", [Level + 1, length(History)]),
   find_wide(NextRow, [], History, Level + 1);
 find_wide([Setup | Rest], NextRow, History, Level) ->
   NewFloors = make_floors_with_history(Setup, History),
   case is_any_final(NewFloors) of
     true -> Level;
-    false -> find_wide(Rest, NewFloors ++ NextRow, NewFloors ++ History, Level)
+    false ->
+      find_wide(Rest, NewFloors ++ NextRow, normalize(NewFloors) ++ History, Level)
   end.
 
 make_floors_with_history(Setup, History) ->
-  lists:foldl(fun (NewSetup, FoundFloors) ->
-                  case lists:member(NewSetup, History) of
-                    true -> FoundFloors;
-                    false -> [NewSetup | FoundFloors]
-                  end
-              end, [], make_floors(Setup)).
+  {Found, _} = lists:foldl(fun (NewSetup, {FoundFloors, NewHistory}) ->
+                               Normalized = normalize(NewSetup),
+                               case lists:member(Normalized, History) of
+                                 true -> {FoundFloors, NewHistory};
+                                 false ->
+                                   {[NewSetup | FoundFloors], [Normalized | NewHistory]}
+                               end
+                           end, {[], History}, make_floors(Setup)),
+  Found.
+
 is_any_final([]) ->
   false;
 is_any_final([Setup | Rest]) ->
@@ -799,6 +803,37 @@ get_other_floors(List, AllFloors) ->
                   [{FloorIndex, get_floor_content(FloorIndex, AllFloors)}
                    | OtherFloors]
               end, [], lists:seq(1, 4) -- List).
+
+normalize(List) when is_list(List) ->
+  lists:map(fun (Element) ->
+                normalize(Element) end, List);
+normalize({Elevator, List}) ->
+  normalize(List, Elevator, #{}).
+
+normalize([], Elevator, Map) ->
+  {Elevator,
+   lists:sort(
+     lists:map(fun (Description) ->
+                   {maps:get("m", Description), maps:get("g", Description)}
+               end, maps:values(Map)))};
+normalize([{Number, Floor} | Rest], Elevator, Map) ->
+  NewMap = lists:foldl(fun(Chip, ChipMap) ->
+                           Key = get_chip_key(Chip),
+                           Type = get_chip_type(Chip),
+                           ExistingValue = maps:get(Key, ChipMap, #{}),
+                           NewValue = maps:put(Type, Number, ExistingValue),
+                           maps:put(Key, NewValue, ChipMap)
+                       end, Map, Floor),
+  normalize(Rest, Elevator, NewMap).
+
+get_chip_key([A, B, _T]) ->
+  [A, B].
+
+get_chip_type([_, _, T]) ->
+  [T].
+
+day_11b() ->
+  find_best_route(day_11b_input()).
 
 %% Inputs
 day_1a_input() ->
@@ -6884,9 +6919,16 @@ bot 71 gives low to bot 152 and high to bot 121".
 %%The second floor contains a polonium-compatible microchip and a promethium-compatible microchip.
 %%The third floor contains nothing relevant.
 %%The fourth floor contains nothing relevant.
-day_11_input() ->
+day_11a_input() ->
   {{elevator, 1},
    [{1, ["pog", "thg", "thm", "prg", "rug", "rum", "cog", "com"]},
+    {2, ["pom", "prm"]},
+    {3, []},
+    {4, []}]}.
+
+day_11b_input() ->
+  {{elevator, 1},
+   [{1, ["elg", "elm", "dig", "dim", "pog", "thg", "thm", "prg", "rug", "rum", "cog", "com"]},
     {2, ["pom", "prm"]},
     {3, []},
     {4, []}]}.
