@@ -5,7 +5,7 @@
                                                 % skipping long test (with skip word),
                                                 % line below prevents compilation warnings
 -export([day_5a_test_skip/0, day_5b_test_skip/0,
-         day_9b_acceptance_test_skip/0]).
+         day_9b_acceptance_test_skip/0, day_11b_acceptance_test_skip/0]).
 
 day_1a_test_() ->
   [ ?_assertEqual(1, santa:get_distance("R1"))
@@ -368,5 +368,11 @@ day_11a_test_() ->
 day_11a_acceptance_test_() ->
   {timeout, 2000, ?_assertEqual(47, santa:day_11a())}.
 
-day_11b_acceptance_test_() ->
+day_11b_acceptance_test_skip() ->
   {timeout, 20000, ?_assertEqual(71, santa:day_11b())}.
+
+day_12a_acceptance_test_() ->
+  {timeout, 20000, ?_assertEqual(318009, (santa:day_12a()))}.
+
+day_12b_acceptance_test_() ->
+  {timeout, 20000, ?_assertEqual(9227663, (santa:day_12b()))}.
