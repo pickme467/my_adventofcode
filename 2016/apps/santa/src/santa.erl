@@ -837,82 +837,50 @@ day_11b() ->
   find_best_route(day_11b_input()).
 
 day_12a() ->
-  Code = extract_code(),
-  execute(1, Code, #{a => 0,
-                     b => 0,
-                     c => 0,
-                     d => 0}).
+  execute(1, extract_code(), #{"a" => 0,
+                               "b" => 0,
+                               "c" => 0,
+                               "d" => 0}).
 
 extract_code() ->
-    {_LastNumber, Code} = lists:foldl(fun (Line, {Number, Map}) ->
-                                          Tokenized = make_tokens(Line),
-                                          {Number + 1, maps:put(Number, Tokenized, Map)}
-                                      end, {1, #{}}, string:tokens(day_12_input(), "\n")),
-    Code.
+  {_LastNumber, Code} = lists:foldl(fun (Line, {Number, Map}) ->
+                                        Tokenized = string:tokens(Line, " "),
+                                        {Number + 1, maps:put(Number, Tokenized, Map)}
+                                    end, {1, #{}}, string:tokens(day_12_input(), "\n")),
+  Code.
 
 execute(Line, Code, State) ->
   {NextLineJump, NewState} = execute_command(maps:get(Line, Code), State),
   case NextLineJump + Line > length(maps:keys(Code)) orelse NextLineJump + Line < 1 of
-    true -> maps:get(a, NewState);
+    true -> maps:get("a", NewState);
     false ->
       execute(NextLineJump + Line, Code, NewState)
   end.
 
-execute_command({cpy, A, B}, State) when not is_atom(A)->
-  {1, State#{B := A}};
-execute_command({cpy, A, B}, State) ->
-  ExtractedA = maps:get(A, State),
-  {1, State#{B := ExtractedA}};
-execute_command({inc, A}, State) ->
-  NewA = maps:get(A, State) + 1,
-  {1, State#{A := NewA}};
-execute_command({dec, A}, State) ->
-  NewA = maps:get(A, State) - 1,
-  {1, State#{A := NewA}};
-execute_command({jnz, A, _B}, State) when not is_atom(A), A =:= 0  ->
-  {1, State};
-execute_command({jnz, A, B}, State) when not is_atom(A), not is_atom(B)  ->
-  {B, State};
-execute_command({jnz, A, B}, State) when not is_atom(A)  ->
-  {maps:get(B, State), State};
-execute_command({jnz, A, B}, State) when not is_atom(B)  ->
-  NextLine = case maps:get(A, State) of
-               0 -> 1;
-               _NonZero -> B
-             end,
-  {NextLine, State};
-execute_command({jnz, A, B}, State) ->
-  NextLine = case maps:get(A, State) of
-               0 -> 1;
-               _NonZero -> maps:get(B, State)
-             end,
+execute_command(["cpy", A, B], State) ->
+  {1, State#{B := get_value(A, State)}};
+execute_command(["inc", A], State) ->
+  {1, State#{A := get_value(A, State) + 1}};
+execute_command(["dec", A], State) ->
+  {1, State#{A := get_value(A, State) - 1}};
+execute_command(["jnz", A, B], State) ->
+  NextLine = get_next_line_for_jnz(get_value(A, State), get_value(B, State)),
   {NextLine, State}.
 
-make_tokens(Line) ->
-  translate_parameters(string:tokens(Line, " ")).
+get_next_line_for_jnz(0, _Any) -> 1;
+get_next_line_for_jnz(_Any, Value) -> Value.
 
-translate_parameters(["cpy", A, B]) ->
-  Atranslated = extract_value_or_register(A),
-  {cpy, Atranslated, list_to_atom(B)};
-translate_parameters(["inc", Register]) ->
-  {inc, list_to_atom(Register)};
-translate_parameters(["dec", Register]) ->
-  {dec, list_to_atom(Register)};
-translate_parameters(["jnz", A, B]) ->
-  {jnz, extract_value_or_register(A), extract_value_or_register(B)}.
-
-extract_value_or_register(A) ->
-  case string:to_integer(A) of
-    {error, _} -> list_to_atom(A);
-    {Value, ""} -> Value
-  end.
+get_value(X, State) when X =:= "a"; X =:= "b"; X =:= "c"; X =:= "d" ->
+  maps:get(X, State);
+get_value(Value, _State) ->
+  {Output, ""} = string:to_integer(Value),
+  Output.
 
 day_12b() ->
-  Code = extract_code(),
-  execute(1, Code, #{a => 0,
-                     b => 0,
-                     c => 1,
-                     d => 0}).
+  execute(1, extract_code(), #{"a" => 0,
+                               "b" => 0,
+                               "c" => 1,
+                               "d" => 0}).
 
 %% Inputs
 day_1a_input() ->
