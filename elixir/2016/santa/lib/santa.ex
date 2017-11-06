@@ -22,6 +22,10 @@ defmodule Santa.Day13 do
     - exit without notification
     - notifies about found solution
     - creates children tasks for next three spots and finishes
+  - arbiter that:
+    - informs about shortest path found or longest path allowed
+    - accepts new shortest path
+    - returns shortest path
 
   """
   @doc """
@@ -51,9 +55,50 @@ defmodule Santa.Day13 do
 
 end
 
+defmodule Santa.Day13.Arbiter do
+  use GenServer
+
+  def start_link() do
+    GenServer.start_link(__MODULE__, %{shortest: 100})
+  end
+
+  def get_shortest(server) do
+    GenServer.call(server, :get_shortest)
+  end
+
+  def new_shortest(server, list) do
+    GenServer.call(server, {:new_shortest, list})
+  end
+
+  def handle_call(:get_shortest, _from, %{shortest: value} = map)
+  when is_integer(value) do
+    {:reply, value, map}
+  end
+
+  def handle_call(:get_shortest, _from, %{shortest: value} = map) do
+    {:reply, length(value), map}
+  end
+
+  def handle_call({:new_shortest, value}, _from, %{shortest: old} = map)
+  when (is_integer(old) and length(value) < old)
+  or (length(value) < length(old)) do
+    {:reply, :ok, %{map | shortest: value}}
+  end
+
+  def handle_call({:new_shortest, _value}, _from, map) do
+    {:reply, :ok, map}
+  end
+end
+
 defmodule Santa.Day13.Pathfinder do
   use Task
   @doc false
 
-  def start_li
+  def start_link(current_path) do
+    Task.start_link(__MODULE__, :execute, current_path)
+  end
+
+  defp execute(current_path) do
+    current_path
+  end
 end
