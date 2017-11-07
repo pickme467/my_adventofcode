@@ -4,8 +4,7 @@ defmodule SantaTest do
 
   test "one one is not a wall" do
     assert Santa.Day13.is_wall(0, {1, 1}) == false
-  end
-
+  enduu 
   setup do
     {:ok, arbiter} = Santa.Day13.Arbiter.start_link()
     %{arbiter: arbiter}
