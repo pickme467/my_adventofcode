@@ -34,6 +34,16 @@ defmodule SantaTest do
     assert Santa.Day13.Arbiter.get_shortest(arbiter) == length(new_shortest)
   end
 
+  test "Arbiter counts coordinates", %{arbiter: arbiter} do
+    one_list = [1, 2, 3]
+    another_list = [1, 3, 7]
+    map = MapSet.union(MapSet.new(one_list), MapSet.new(another_list))
+    Santa.Day13.Arbiter.add_path(arbiter, one_list)
+    assert Santa.Day13.Arbiter.get_all_coordinates(arbiter) == length(one_list)
+    Santa.Day13.Arbiter.add_path(arbiter, another_list)
+    assert Santa.Day13.Arbiter.get_all_coordinates(arbiter) == MapSet.size(map)
+  end
+
   test "If good position reached new current position is added
   to the wisited path" do
     path = [:path]
@@ -51,5 +61,24 @@ defmodule SantaTest do
     assert Enum.member?(locations, {1, 0})
     assert Enum.member?(locations, {0, 1})
     assert Enum.member?(locations, {2, 1})
+  end
+
+  test "If current path length is same as shortest one,
+  that means we failed finding it" do
+    {:not_found, _} = Santa.Day13.Step.execute(1, {2, 3}, {5, 4}, [{1, 1}])
+  end
+
+  test "If we are at wall, we fail" do
+    {:not_found, _} = Santa.Day13.Step.execute(10, {2, 3}, {1, 2}, [])
+  end
+
+  test "If our current location is on path, we fail" do
+    {:not_found, _} = Santa.Day13.Step.execute(
+      10, {2, 3}, {1, 2}, [{7, 8}, {1, 2}, {2, 3}])
+  end
+
+  test "If our current location is invalid we fail" do
+    {:not_found, _} = Santa.Day13.Step.execute(10, {2, 3}, {-1, 2}, [])
+    {:not_found, _} = Santa.Day13.Step.execute(10, {2, 3}, {1, -2}, [])
   end
 end

@@ -33,14 +33,26 @@ defmodule Santa.Day13 do
   Day 13 Part one acceptance test
   iex> Santa.Day13.go_part_one
   86
-
   """
   def go_part_one do
-    main_supervisor = make_supervision_tree()
+    main_supervisor = make_supervision_tree(Santa.Day13.Crawler)
     run_first_crawler(main_supervisor)
     {crawler_supervisor, arbiter} = get_crawler_sup_and_arbiter(main_supervisor)
     wait_for_result(crawler_supervisor)
     Santa.Day13.Arbiter.get_shortest(arbiter)
+  end
+
+  @doc """
+  Day 13 Part two acceptance test
+  iex> Santa.Day13.go_part_two
+  127
+  """
+  def go_part_two do
+    main_supervisor = make_supervision_tree(Santa.Day13.Crawler50)
+    run_first_crawler(main_supervisor)
+    {crawler_supervisor, arbiter} = get_crawler_sup_and_arbiter(main_supervisor)
+    wait_for_result(crawler_supervisor)
+    Santa.Day13.Arbiter.get_all_coordinates(arbiter)
   end
 
   def day_13_input do
@@ -55,10 +67,11 @@ defmodule Santa.Day13 do
     end
   end
 
-  defp make_supervision_tree do
+  defp make_supervision_tree(crawler_module) do
     {:ok, main_supervisor} = Supervisor.start_link([
       Santa.Day13.Arbiter.child_spec([]),
-      Santa.Day13.Crawler.Supervisor.child_spec([])], strategy: :one_for_one)
+      Santa.Day13.Crawler.Supervisor.child_spec(crawler_module)],
+      strategy: :one_for_one)
     main_supervisor
   end
 
@@ -112,43 +125,24 @@ defmodule Santa.Day13.Step do
   the final point excluded
   iex> Santa.Day13.Step.execute(10, {5,5}, {5,5}, [:path])
   {:found, [:path]}
-
-  If current path length is same as shortest one,
-  that means we failed finding it
-  iex> Santa.Day13.Step.execute(1, {2, 3}, {5, 4}, [{1, 1}])
-  {:not_found}
-
-  If we are at wall, we fail
-  iex> Santa.Day13.Step.execute(10, {2, 3}, {1, 2}, [])
-  {:not_found}
-
-  If our current location is on path, we fail
-  iex> Santa.Day13.Step.execute(10, {2, 3}, {1, 2}, [{7, 8}, {1, 2}, {2, 3}])
-  {:not_found}
-
-  If our current location is invalid we fail
-  iex> Santa.Day13.Step.execute(10, {2, 3}, {-1, 2}, [])
-  {:not_found}
-  iex> Santa.Day13.Step.execute(10, {2, 3}, {1, -2}, [])
-  {:not_found}
   """
   def execute(_max_path, target, target, path) do
     {:found, path}
   end
-  def execute(_max_path, _target, {x, y}, _path) when
+  def execute(_max_path, _target, {x, y}, path) when
   x < 0 or y < 0 do
-    {:not_found}
+    {:not_found, path}
   end
   def execute(max_path, _target, _current, path)
   when max_path <= length(path) do
-    {:not_found}
+    {:not_found, path}
   end
   def execute(_max_path, _target, {x, y} = current, path) do
     case (false == is_wall(get_my_number(), {x, y}))
      and (false == Enum.member?(path, current))
      do
        true  -> {:continue, [current | path], get_neighbours(current)}
-       false -> {:not_found}
+       false -> {:not_found, path}
      end
   end
 
@@ -167,7 +161,8 @@ defmodule Santa.Day13.Arbiter do
   use GenServer, start: {__MODULE__, :start_link, []}
 
   def start_link() do
-    GenServer.start_link(__MODULE__, %{shortest: 100})
+    GenServer.start_link(__MODULE__, %{shortest: 100,
+                                       all_coordinates: MapSet.new})
   end
 
   def get_shortest(server) do
@@ -176,6 +171,14 @@ defmodule Santa.Day13.Arbiter do
 
   def new_shortest(server, list) do
     GenServer.call(server, {:new_shortest, list})
+  end
+
+  def add_path(server, list) do
+    GenServer.cast(server, {:add_path, list})
+  end
+
+  def get_all_coordinates(server) do
+    GenServer.call(server, :get_all_coordinates)
   end
 
   def handle_call(:get_shortest, _from, %{shortest: value} = map)
@@ -196,6 +199,15 @@ defmodule Santa.Day13.Arbiter do
   def handle_call({:new_shortest, _value}, _from, map) do
     {:reply, :ok, map}
   end
+
+  def handle_call(:get_all_coordinates, _from, %{all_coordinates: all} = map) do
+    {:reply, MapSet.size(all), map}
+  end
+
+  def handle_cast({:add_path, list}, %{all_coordinates: set} = map) do
+    new = MapSet.new(list)
+    {:noreply, %{map | all_coordinates: MapSet.union(new, set)}}
+  end
 end
 
 defmodule Santa.Day13.Crawler do
@@ -210,8 +222,31 @@ defmodule Santa.Day13.Crawler do
   def run(supervisor, arbiter, target, current, path) do
     shortest_path = Santa.Day13.Arbiter.get_shortest(arbiter)
     case Santa.Day13.Step.execute(shortest_path, target, current, path) do
-      {:not_found} -> :ok
+      {:not_found, _path} -> :ok
       {:found, path} -> Santa.Day13.Arbiter.new_shortest(arbiter, path)
+      {:continue, path, neighbours} ->
+        Enum.each(neighbours,
+          fn (new_location) ->
+            Santa.Day13.Crawler.Supervisor.create_crawler(
+              supervisor, arbiter, target, new_location, path)
+          end)
+    end
+  end
+end
+
+defmodule Santa.Day13.Crawler50 do
+  use Task, start: {__MODULE__, :start_link, []}
+
+  @doc false
+  def start_link(supervisor, arbiter, target, current, path) do
+    Task.start_link(__MODULE__, :run, [supervisor, arbiter,
+                                       target, current, path])
+  end
+
+  def run(supervisor, arbiter, target, current, path) do
+    shortest_path = 51 #first location plus 50 steps
+    case Santa.Day13.Step.execute(shortest_path, target, current, path) do
+      {:not_found, path} -> Santa.Day13.Arbiter.add_path(arbiter, path)
       {:continue, path, neighbours} ->
         Enum.each(neighbours,
           fn (new_location) ->
@@ -225,12 +260,12 @@ end
 defmodule Santa.Day13.Crawler.Supervisor do
   use Supervisor, strategy: :simple_one_for_one
 
-  def start_link([]) do
-    Supervisor.start_link(__MODULE__, [])
+  def start_link(crawler_module) do
+    Supervisor.start_link(__MODULE__, [crawler_module])
   end
 
-  def init([]) do
-    Supervisor.init([Santa.Day13.Crawler.child_spec([])],
+  def init([crawler_module]) do
+    Supervisor.init([crawler_module.child_spec([])],
       strategy: :simple_one_for_one)
   end
 
