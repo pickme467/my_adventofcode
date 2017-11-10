@@ -1,13 +1,17 @@
 defmodule SantaTest do
   use ExUnit.Case
+  doctest Santa.Day13.Step
   doctest Santa.Day13
 
   test "one one is not a wall" do
-    assert Santa.Day13.is_wall(0, {1, 1}) == false
+    assert Santa.Day13.Step.is_wall(Santa.Day13.Step.get_my_number, {1, 1})
+    == false
   end
 
   setup do
-    {:ok, arbiter} = Santa.Day13.Arbiter.start_link()
+    {:ok, supervisor} = Supervisor.start_link([], strategy: :one_for_one)
+    {:ok, arbiter} = Supervisor.start_child(supervisor,
+      Santa.Day13.Arbiter.child_spec([]))
     %{arbiter: arbiter}
   end
 
@@ -30,4 +34,22 @@ defmodule SantaTest do
     assert Santa.Day13.Arbiter.get_shortest(arbiter) == length(new_shortest)
   end
 
+  test "If good position reached new current position is added
+  to the wisited path" do
+    path = [:path]
+    current = {1, 1}
+    {:continue, [^current | ^path], _next_locations} =
+      Santa.Day13.Step.execute(10, {10, 10}, current, path)
+  end
+
+  test "Good position returns list of four neighbours" do
+    current = {1, 1}
+    {:continue, _path, locations} =
+      Santa.Day13.Step.execute(10, {10, 10}, current, [])
+    assert length(locations) == 4
+    assert Enum.member?(locations, {1, 2})
+    assert Enum.member?(locations, {1, 0})
+    assert Enum.member?(locations, {0, 1})
+    assert Enum.member?(locations, {2, 1})
+  end
 end
