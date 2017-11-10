@@ -83,11 +83,11 @@ defmodule Santa.Day13.Step do
   @doc false
 
   @doc """
-  {1, 3} is wall for my input puzzle
+  The following coordinate is a wall for my input puzzle
   iex> Santa.Day13.Step.is_wall(Santa.Day13.Step.get_my_number, {1, 2})
   true
 
-  {1, 2} is not wall for my input puzzle
+  The following coordinate is not a wall for my input puzzle
   iex> Santa.Day13.Step.is_wall(Santa.Day13.Step.get_my_number, {1, 1})
   false
 
@@ -209,14 +209,10 @@ defmodule Santa.Day13.Crawler do
 
   def run(supervisor, arbiter, target, current, path) do
     shortest_path = Santa.Day13.Arbiter.get_shortest(arbiter)
-    # IO.puts "shortest: #{shortest_path}"
-    # IO.puts "target: {#{inspect(target)}}, current: {#{inspect(current)}}, path: #{inspect(path)}"
     case Santa.Day13.Step.execute(shortest_path, target, current, path) do
-      {:not_found} -> :ok # IO.puts ":not found"; :ok
+      {:not_found} -> :ok
       {:found, path} -> Santa.Day13.Arbiter.new_shortest(arbiter, path)
-        # IO.puts "found shortest #{inspect(path)}"; :found
       {:continue, path, neighbours} ->
-          # IO.puts "continuing on #{inspect(neighbours)}"
         Enum.each(neighbours,
           fn (new_location) ->
             Santa.Day13.Crawler.Supervisor.create_crawler(
