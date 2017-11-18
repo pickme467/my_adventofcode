@@ -1,5 +1,5 @@
 defmodule SantaTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Santa.Day13.Step
   doctest Santa.Day13
 
@@ -81,4 +81,11 @@ defmodule SantaTest do
     {:not_found, _} = Santa.Day13.Step.execute(10, {2, 3}, {-1, 2}, [])
     {:not_found, _} = Santa.Day13.Step.execute(10, {2, 3}, {1, -2}, [])
   end
+end
+
+defmodule SantaLongTests do
+  use ExUnit.Case, async: true
+  @moduletag timeout: 900_000
+
+  doctest Santa.Day14
 end

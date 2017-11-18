@@ -274,3 +274,167 @@ defmodule Santa.Day13.Crawler.Supervisor do
                                         current, path])
   end
 end
+
+defmodule Santa.Day14 do
+  @doc """
+  iex> Santa.Day14.go_part_one
+  15035
+  """
+  def go_part_one do
+    generate_keys(&calculate_md5/1)
+    #:all_wrong
+  end
+
+  @doc """
+  iex> Santa.Day14.go_part_two
+  19968
+  """
+  def go_part_two do
+    generate_keys(&calculate_md5_2016/1)
+  end
+
+  def generate_keys(calculation) do
+    generate_keys(calculation, 0, {[], 0, 0})
+  end
+
+  def generate_keys(_, _, {_, last_found, 64}) do
+    last_found
+  end
+
+  def generate_keys(calculation, index,
+    {cache, found_index, found_count}) do
+    case is_key(calculation, cache, index) do
+      {new_cache, true} -> generate_keys(calculation, index + 1,
+                                           {new_cache, index, found_count + 1})
+        {new_cache, false} -> generate_keys(calculation, index + 1,
+                                              {new_cache,
+                                               found_index,
+                                               found_count})
+    end
+  end
+
+  defp find_three_or_five(calculation, cache, index) do
+    case List.keyfind(cache, index, 0) do
+      nil -> string = make_string(index)
+             md5 = calculation.(string)
+             case has_three_or_five(md5) do
+               [] -> {cache, []}
+               has_it -> {[{index, has_it} | cache], has_it}
+             end
+      {^index, value} -> {cache, value}
+    end
+
+  end
+
+  def is_key(calculation, cache, index) do
+      {new_cache, [threes: found_three, fives:  _ ]} =
+        find_three_or_five(calculation, cache, index)
+    case found_three do
+      [] -> {new_cache, false}
+      _ -> check_fives_for(calculation, new_cache, index, found_three, 1000)
+    end
+  end
+
+  defp check_fives_for(_, cache, _, _, 0) do
+    {cache, false}
+  end
+
+  defp check_fives_for(calculation, cache, index, found, iteration) do
+    {new_cache, [_ , fives: found_fives]} =
+      find_three_or_five(calculation, cache, index + 1 + (1000 - iteration))
+    case found_fives do
+      [] ->
+        check_fives_for(calculation, new_cache, index, found, iteration - 1)
+      _ -> case MapSet.size(
+             MapSet.intersection(
+               MapSet.new(found), MapSet.new(found_fives))) > 0 do
+             true -> {new_cache, true}
+             false -> check_fives_for(calculation, new_cache, index,
+                        found, iteration - 1)
+           end
+    end
+  end
+
+  def input() do
+    "ihaygndm"
+  end
+
+  @doc """
+  Number plus input
+  iex> Santa.Day14.make_string(1)
+  "ihaygndm1"
+  """
+  def make_string(number) do
+    input() <> Integer.to_string(number, 10)
+  end
+
+  def calculate_md5(input) do
+    String.downcase(Base.encode16(:crypto.hash(:md5, input)))
+  end
+
+  def calculate_md5_2016(input) do
+    first = calculate_md5(input)
+    calculate_md5_times(first, 2016)
+  end
+
+  defp calculate_md5_times(last, 0) do
+    last
+  end
+
+  defp calculate_md5_times(middle, times) do
+    calculate_md5_times(calculate_md5(middle), times - 1)
+  end
+
+  @doc """
+  Let's check if it works
+  iex> Santa.Day14.has_three_or_five("aaabc")
+  [threes: ["a"], fives: []]
+
+  iex> Santa.Day14.has_three_or_five("777bc77")
+  [threes: ["7"], fives: []]
+
+  iex> Santa.Day14.has_three_or_five("77bc77")
+  [threes: [], fives: []]
+
+  iex> Santa.Day14.has_three_or_five("abbaccc77dddbc77")
+  [threes: ["c"], fives: []]
+
+  iex> Santa.Day14.has_three_or_five("abbzzzzzzzacc77ddbc77")
+  [threes: ["z"], fives: ["z"]]
+  """
+  def has_three_or_five(input) do
+    has_three_or_five(input, MapSet.new, MapSet.new)
+  end
+
+  def has_three_or_five(
+    <<a::bytes-size(1), a::bytes-size(1), a::bytes-size(1),
+      a::bytes-size(1), a::bytes-size(1), rest::binary>>,
+    found_three, found_five) do
+    new_three = case MapSet.size(found_three) do
+                  0 -> MapSet.put(found_three, a)
+                  1 -> found_three
+                end
+    has_three_or_five(rest, new_three,
+      MapSet.put(found_five, a))
+  end
+
+  def has_three_or_five(
+    <<a::bytes-size(1), a::bytes-size(1), a::bytes-size(1), rest::binary>>,
+    found_three, found_five) do
+      new_three = case MapSet.size(found_three) do
+                    0 -> MapSet.put(found_three, a)
+                    1 -> found_three
+                  end
+    has_three_or_five(rest, new_three, found_five)
+  end
+
+  def has_three_or_five(anything, found_three, found_five) do
+    case String.length(anything) <= 3 do
+      true -> [threes: Enum.sort(MapSet.to_list(found_three)),
+               fives:  Enum.sort(MapSet.to_list(found_five))]
+      false ->
+        <<_a::bytes-size(1), rest::binary>> = anything
+        has_three_or_five(rest, found_three, found_five)
+    end
+  end
+end
