@@ -294,7 +294,7 @@ defmodule Santa.Day14 do
   end
 
   def generate_keys(calculation) do
-    generate_keys(calculation, 0, {[], 0, 0})
+    generate_keys(calculation, 0, {{0, []}, 0, 0})
   end
 
   def generate_keys(_, _, {_, last_found, 64}) do
@@ -303,53 +303,65 @@ defmodule Santa.Day14 do
 
   def generate_keys(calculation, index,
     {cache, found_index, found_count}) do
-    case is_key(calculation, cache, index) do
-      {new_cache, true} -> generate_keys(calculation, index + 1,
-                                           {new_cache, index, found_count + 1})
-        {new_cache, false} -> generate_keys(calculation, index + 1,
-                                              {new_cache,
-                                               found_index,
-                                               found_count})
+    new_cache = make_new_cache(calculation, cache, index)
+    case is_key(new_cache, index) do
+      true -> generate_keys(calculation, index + 1,
+                              {new_cache, index, found_count + 1})
+      false -> generate_keys(calculation, index + 1,
+                               {new_cache,
+                                found_index,
+                                found_count})
     end
   end
 
-  defp find_three_or_five(calculation, cache, index) do
-    case List.keyfind(cache, index, 0) do
-      nil -> string = make_string(index)
-             md5 = calculation.(string)
-             case has_three_or_five(md5) do
-               [] -> {cache, []}
-               has_it -> {[{index, has_it} | cache], has_it}
-             end
-      {^index, value} -> {cache, value}
-    end
-
+  defp get_threes_and_fives({_, cache}, index) do
+    {^index, found} =
+      List.keyfind(cache, index, 0, {index, [threes: [], fives: []]})
+    found
   end
 
-  def is_key(calculation, cache, index) do
-      {new_cache, [threes: found_three, fives:  _ ]} =
-        find_three_or_five(calculation, cache, index)
+  defp make_new_cache(_, {first_not_calculated, _} = old_cache, index)
+  when first_not_calculated > index + 1001 do
+                                old_cache
+  end
+
+  defp make_new_cache(calculation, {first_not_calculated, cache}, index) do
+    new_cache = make_cache(calculation, cache, first_not_calculated)
+    make_new_cache(calculation, {first_not_calculated + 1, new_cache}, index)
+  end
+
+  defp make_cache(calculation, cache, index) do
+    string = make_string(index)
+    md5 = calculation.(string)
+    case has_three_or_five(md5) do
+      [] -> cache
+      has_it -> [{index, has_it} | cache]
+    end
+  end
+
+  def is_key(cache, index) do
+      [threes: found_three, fives:  _ ] = get_threes_and_fives(cache, index)
     case found_three do
-      [] -> {new_cache, false}
-      _ -> check_fives_for(calculation, new_cache, index, found_three, 1000)
+      [] -> false
+      _ -> check_fives_for(cache, index, found_three, 1000)
     end
   end
 
-  defp check_fives_for(_, cache, _, _, 0) do
-    {cache, false}
+  defp check_fives_for(_, _, _, 0) do
+    false
   end
 
-  defp check_fives_for(calculation, cache, index, found, iteration) do
-    {new_cache, [_ , fives: found_fives]} =
-      find_three_or_five(calculation, cache, index + 1 + (1000 - iteration))
+  defp check_fives_for(cache, index, found, iteration) do
+    [_ , fives: found_fives] =
+      get_threes_and_fives(cache, index + 1 + (1000 - iteration))
     case found_fives do
       [] ->
-        check_fives_for(calculation, new_cache, index, found, iteration - 1)
+        check_fives_for(cache, index, found, iteration - 1)
       _ -> case MapSet.size(
              MapSet.intersection(
                MapSet.new(found), MapSet.new(found_fives))) > 0 do
-             true -> {new_cache, true}
-             false -> check_fives_for(calculation, new_cache, index,
+             true  -> true
+             false -> check_fives_for(cache, index,
                         found, iteration - 1)
            end
     end
