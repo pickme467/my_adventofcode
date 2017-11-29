@@ -31,6 +31,7 @@ defmodule Santa.Day13 do
   """
   @doc """
   Day 13 Part one acceptance test
+
   iex> Santa.Day13.go_part_one
   86
   """
@@ -44,6 +45,7 @@ defmodule Santa.Day13 do
 
   @doc """
   Day 13 Part two acceptance test
+
   iex> Santa.Day13.go_part_two
   127
   """
@@ -97,10 +99,12 @@ defmodule Santa.Day13.Step do
 
   @doc """
   The following coordinate is a wall for my input puzzle
+
   iex> Santa.Day13.Step.is_wall(Santa.Day13.Step.get_my_number, {1, 2})
   true
 
   The following coordinate is not a wall for my input puzzle
+
   iex> Santa.Day13.Step.is_wall(Santa.Day13.Step.get_my_number, {1, 1})
   false
 
@@ -123,6 +127,7 @@ defmodule Santa.Day13.Step do
   @doc """
   If target is equal current - we found it. Return path with
   the final point excluded
+
   iex> Santa.Day13.Step.execute(10, {5,5}, {5,5}, [:path])
   {:found, [:path]}
   """
@@ -373,6 +378,7 @@ defmodule Santa.Day14 do
 
   @doc """
   Number plus input
+
   iex> Santa.Day14.make_string(1)
   "ihaygndm1"
   """
@@ -399,6 +405,7 @@ defmodule Santa.Day14 do
 
   @doc """
   Let's check if it works
+
   iex> Santa.Day14.has_three_or_five("aaabc")
   [threes: ["a"], fives: []]
 
@@ -447,6 +454,60 @@ defmodule Santa.Day14 do
       false ->
         <<_a::bytes-size(1), rest::binary>> = anything
         has_three_or_five(rest, found_three, found_five)
+    end
+  end
+end
+
+defmodule Santa.Day15 do
+  @moduledoc """
+  This one is easy. I won't do any translations from original input
+  into some internal representation. Instead I will make this
+  representation right away and just use it as a set of matchers. If
+  all matchers match given time that meant we found the right
+  time. End of story.
+  """
+
+  @doc """
+  Acceptance test for part one
+
+  iex> Santa.Day15.go_part_one()
+  148737
+  """
+  def go_part_one() do
+    matchers = get_matchers()
+    find_first_that_match(19 + 5, matchers)
+  end
+
+  @doc """
+  Part two has one additional matcher, so let's use previous set,
+  extend it with the new one and pass to the function that does the
+  search
+
+  Acceptance test for part two
+
+  iex> Santa.Day15.go_part_two()
+  2353212
+  """
+  def go_part_two() do
+    matchers = get_matchers()
+    matchers = [fn (x) -> rem(x + 7, 11) == 0 end,] ++ matchers
+    find_first_that_match(19 + 5, matchers)
+  end
+
+  defp get_matchers() do
+    [fn (x) -> rem(x - 2,  5) == 0 end,
+     fn (x) -> rem(x - 4, 13) == 0 end,
+     fn (x) -> rem(x - 4, 17) == 0 end,
+     fn (x) -> rem(x + 3,  3) == 0 end,
+     fn (x) -> rem(x - 5, 19) == 0 end,
+     fn (x) -> rem(x + 6,  7) == 0 end,
+    ]
+  end
+
+  defp find_first_that_match(t, matchers) do
+    case Enum.all?(matchers, fn (matcher) -> matcher.(t) end) do
+      true -> t
+      false -> find_first_that_match(t + 19, matchers)
     end
   end
 end
