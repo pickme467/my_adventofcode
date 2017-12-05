@@ -282,7 +282,7 @@ end
 
 defmodule Santa.Day14 do
   @doc """
-  iex> Santa.Day14.go_part_one
+  noiex> Santa.Day14.go_part_one
   15035
   """
   def go_part_one do
@@ -291,7 +291,7 @@ defmodule Santa.Day14 do
   end
 
   @doc """
-  iex> Santa.Day14.go_part_two
+  noiex> Santa.Day14.go_part_two
   19968
   """
   def go_part_two do
@@ -509,5 +509,174 @@ defmodule Santa.Day15 do
       true -> t
       false -> find_first_that_match(t + 19, matchers)
     end
+  end
+end
+
+defmodule Santa.Day16 do
+  @moduledoc """
+
+  This day's exercise is tricky. Attempt done for the first part is
+  insufficient for the second part. It requires huge amount of
+  computation power and/or memory. So the solution is to find pattern
+  instead of building brute force attempt.
+
+  If input is A and its reversed version is B then each iteration is
+  like the following pattern:
+
+  AxBxAxBxAxB
+
+  Where x is eiter zero or one. So to resolve the exercise it is
+  enough to find correct sequence of xxxx with the total length of
+  string greater or equal to given length. Each new generation gives 2
+  times previous length plus one, so it is easy to find how many x'es
+  there will be in the final sequence.
+
+  x'es follow the following rule
+  [sequence 0] = [0]
+  [sequence (a+1)] = [sequence (a)] ++ [0] ++ [sequence (a) reversed]
+
+  So let's implement it that way
+  """
+  require Integer
+
+  @doc """
+  Acceptance test
+
+  iex>Santa.Day16.go_part_one()
+  [1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1]
+  """
+  def go_part_one() do
+    length = 272
+    input = my_input_list()
+    reversed = reverse(my_input_list())
+    punctuators = find_for_given(length, length(input), <<>>)
+    calculate_checksum(length, punctuators, input, reversed)
+  end
+  @doc """
+  Acceptance test
+
+  noiex>Santa.Day16.go_part_two()
+  [0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1]
+  """
+  def go_part_two() do
+    length = 35651584
+    input = my_input_list()
+    reversed = reverse(my_input_list())
+    punctuators = find_for_given(length, length(input), <<>>)
+    calculate_checksum(length, punctuators, input, reversed)
+  end
+
+  defp my_input_list() do
+    [1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]
+  end
+
+  defp reverse(input) when is_list(input) do
+    Enum.reverse(Enum.map(input, fn (1) -> 0
+                       (0) -> 1 end))
+  end
+
+  defp reverse(input) do
+    reverse(input, <<>>)
+  end
+
+  defp reverse(<<>>, output) do
+    output
+  end
+
+  defp reverse(<<1::size(1), rest::bitstring()>>, output) do
+    reverse(rest, <<0::size(1), output::bitstring()>>)
+  end
+
+  defp reverse(<<0::size(1), rest::bitstring()>>, output) do
+    reverse(rest, <<1::size(1), output::bitstring()>>)
+  end
+
+  defp find_for_given(total_length, _, result) when total_length <= 0 do
+    result
+  end
+
+  defp find_for_given(total_length, part_length, previous) do
+    find_for_given(total_length - 2 * part_length - 1, part_length,
+      <<previous::bitstring(), 0::size(1), reverse(previous)::bitstring()>>)
+  end
+
+  defp calculate_checksum(length, punctuators, input, reversed) do
+    calculate_checksum(length, punctuators, input, reversed, [], <<>>)
+  end
+
+  defp calculate_checksum(length, <<>>, input, _reversed,
+    remainder, checksum) do
+    {_, partial, _} = partial_checksum(length, remainder ++ input)
+    calculate_odd_checksum(checksum ++ partial)
+  end
+
+  defp calculate_checksum(length, <<x::size(1), rest::bitstring()>>,
+    input, reversed, remainder, checksum) do
+    {new_length, partial, new_remainder} = partial_checksum(length,
+      remainder ++ input ++ [x])
+    case new_length do
+      0 ->
+        calculate_odd_checksum(<<checksum::bitstring(), partial::bitstring()>>)
+      _ ->
+        calculate_checksum(new_length, rest, reversed, input,
+          new_remainder, <<checksum::bitstring(), partial::bitstring()>>)
+    end
+  end
+
+  defp partial_checksum(length, input) do
+    partial_checksum(length, input, <<>>)
+  end
+
+  defp partial_checksum(length, input, output)
+  when length == 0 or input == [] do
+    {length, output, []}
+  end
+
+  defp partial_checksum(length, input, output) when length(input) == 1 do
+    {length, output, input}
+  end
+
+  defp partial_checksum(length, [a, a | rest], output) do
+    partial_checksum(length - 2, rest, <<output::bitstring(), 1::size(1)>>)
+  end
+
+  defp partial_checksum(length, [_, _ | rest], output) do
+    partial_checksum(length - 2, rest, <<output::bitstring(), 0::size(1)>>)
+  end
+
+  defp calculate_odd_checksum(checksum)
+  when Integer.is_odd(bit_size(checksum)) do
+    to_list([], checksum)
+  end
+
+  defp calculate_odd_checksum(checksum) do
+    calculate_odd_checksum(checksum, <<>>)
+  end
+
+  defp calculate_odd_checksum(<<>>, new_checksum)
+  when Integer.is_odd(bit_size(new_checksum)) do
+    to_list([], new_checksum)
+  end
+
+  defp calculate_odd_checksum(<<>>, new_checksum) do
+    calculate_odd_checksum(new_checksum, <<>>)
+  end
+
+  defp calculate_odd_checksum(<<a::size(1), a::size(1), rest::bitstring()>>,
+    output) do
+    calculate_odd_checksum(rest, <<output::bitstring(), 1::size(1)>>)
+  end
+
+  defp calculate_odd_checksum(<<_::size(1), _::size(1), rest::bitstring()>>,
+    output) do
+    calculate_odd_checksum(rest, <<output::bitstring(), 0::size(1)>>)
+  end
+
+  defp to_list(list, <<>>) do
+    Enum.reverse(list)
+  end
+
+  defp to_list(list, <<a::size(1), rest::bitstring()>>) do
+    to_list([a | list], rest)
   end
 end

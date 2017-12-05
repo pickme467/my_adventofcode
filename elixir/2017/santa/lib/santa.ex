@@ -111,3 +111,56 @@ defmodule Santa.Day2 do
       3386, 2392, 1108, 2741]]
   end
 end
+
+defmodule Santa.Day3 do
+  require Integer
+
+  @doc """
+  Acceptance test
+  iex> Santa.Day3.part_one
+  480
+  """
+  def part_one() do
+    find_distance(347991)
+  end
+  @doc """
+  iex> Santa.Day3.find_smallest_square_for(8)
+  9
+
+  iex> Santa.Day3.find_smallest_square_for(10)
+  25
+  """
+  def find_smallest_square_for(number) do
+    smallest_square = round(Float.ceil(:math.sqrt(number)))
+    smallest_odd_square = case Integer.is_odd(smallest_square) do
+                            true  -> smallest_square
+                            false -> smallest_square + 1
+                          end
+    round(:math.pow(smallest_odd_square, 2))
+  end
+
+  @doc """
+  iex> Santa.Day3.find_distance(10)
+  3
+
+  iex> Santa.Day3.find_distance(23)
+  2
+
+  iex> Santa.Day3.find_distance(12)
+  3
+
+  iex> Santa.Day3.find_distance(1024)
+  31
+  """
+  def find_distance(number) do
+    bottom_corner = find_smallest_square_for(number)
+    side_size = round(:math.sqrt(bottom_corner))
+    distance_to_corner = bottom_corner - number
+    full_sides = round(Float.floor(distance_to_corner / (side_size - 1)))
+    nearest_corner_distance =
+      bottom_corner - full_sides * (side_size - 1) - number
+    round((side_size - 1)/2 +
+      abs(nearest_corner_distance - (side_size - 1)/2))
+  end
+
+end
