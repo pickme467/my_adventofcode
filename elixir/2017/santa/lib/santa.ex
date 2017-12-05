@@ -162,6 +162,7 @@ defmodule Santa.Day3 do
     round((side_size - 1)/2 +
       abs(nearest_corner_distance - (side_size - 1)/2))
   end
+
   @doc """
   Acceptance test
   iex> Santa.Day3.part_two()
@@ -172,6 +173,9 @@ defmodule Santa.Day3 do
   end
 
   @doc """
+  Function initializes crawler with first element that falls under
+  generic case. Special cases are excluded that way.
+
   iex> Santa.Day3.crawl(24)
   25
 
@@ -182,11 +186,13 @@ defmodule Santa.Day3 do
   362
   """
   def crawl(expected_sum) do
+    # initialize with first element that falls under generic case.
+    # Special cases excluded that way
     crawl(7, 7, 6, [3, 2], %{1 => 1, 2 => 1, 3 => 2, 4 => 4, 5 => 5, 6 => 10}, expected_sum)
   end
 
   def crawl(index, sum_squares, last_4_squares, next_squares, dictionary, expected_sum) do
-    new_sum = case type(index, sum_squares, next_squares) do
+    new_sum = case point_type(index, sum_squares, next_squares) do
                 :at -> count_at(index, last_4_squares, dictionary)
                 :before -> count_before(index, last_4_squares, dictionary)
                 :after -> count_after(index, last_4_squares, dictionary)
@@ -204,7 +210,7 @@ defmodule Santa.Day3 do
   end
 
   def count_new_squares(index, sum, last_4, next)  do
-    case type(index, sum, next) do
+    case point_type(index, sum, next) do
       :at -> {index + 1, get_new_sum(sum, next), last_4 + 2, get_new_next(next)}
       _   -> {index + 1, sum, last_4, next}
     end
@@ -222,19 +228,19 @@ defmodule Santa.Day3 do
     [a, a]
   end
 
-  def type(index, index, _next) do
+  def point_type(index, index, _next) do
     :at
   end
 
-  def type(index, sum_squares, [_, _]) when index + 1 == sum_squares do
+  def point_type(index, sum_squares, [_, _]) when index + 1 == sum_squares do
                                                     :before
   end
 
-  def type(index, sum_squares, [_, b]) when index + b - 1 == sum_squares do
+  def point_type(index, sum_squares, [_, b]) when index + b - 1 == sum_squares do
                                                                    :after
   end
 
-  def type(_, _, _) do
+  def point_type(_, _, _) do
     :rest
   end
 
@@ -264,7 +270,7 @@ defmodule Santa.Day3 do
   end
 
   def get_at(index, dictionary) do
-    Map.get(dictionary, index)
+    Map.get(dictionary, index, 0)
   end
 
   def put(index, value, dictionary) do
