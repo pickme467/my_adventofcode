@@ -1,21 +1,3 @@
-# Santa
+# Advent of Code 2016
 
-**TODO: Add description**
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `santa` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:santa, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/santa](https://hexdocs.pm/santa).
-
+**This is my attempt at solving problems presented at http://adventofcode.com webpage
