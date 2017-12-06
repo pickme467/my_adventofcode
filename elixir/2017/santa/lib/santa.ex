@@ -334,6 +334,87 @@ defmodule Santa.Day5 do
   end
 end
 
+defmodule Santa.Day6 do
+  @doc """
+  iex> Santa.Day6.part_one
+  12841
+  """
+  def part_one() do
+    {iteration, _} = iterate(Santa.Day6.Input.input(), [], 0)
+    iteration
+  end
+
+  @doc """
+  iex> Santa.Day6.part_two
+  8038
+  """
+  def part_two() do
+    {_, cycle_size} = iterate(Santa.Day6.Input.input(), [], 0)
+    cycle_size
+  end
+
+  @doc """
+  iex> Santa.Day6.iterate(%{ 1 => 0, 2 => 2, 3 => 7, 4 => 0}, [], 0)
+  {5, 4}
+  """
+  def iterate(current, cache, iteration) do
+    case current in cache do
+      true -> {iteration, iteration - length(find_in(cache, current))}
+      false -> iterate(make_next(current), [current] ++ cache, iteration + 1)
+    end
+  end
+
+  def make_next(current) do
+    index = find_max(current)
+    value = current[index]
+    distribute(next_index(index, current), value, Map.put(current, index, 0))
+  end
+
+  @doc """
+  iex> Santa.Day6.find_max(%{1 => 1, 2 => 0})
+  1
+
+  iex> Santa.Day6.find_max(%{1 => 1, 2 => 0, 3 => 1})
+  1
+
+  iex> Santa.Day6.find_max(%{1 => 2, 2 => 4, 3 => 1})
+  2
+  """
+  def find_max(data) do
+    Map.to_list(data)
+    |> Enum.sort()
+    |> Enum.reduce(1, fn ({index, value}, acc) ->
+      case data[acc] < value do
+        true  -> index
+        false -> acc
+      end
+    end)
+  end
+
+  def distribute(_, 0, data) do
+    data
+  end
+
+  def distribute(index, value, data) do
+    distribute(next_index(index, data), value - 1, Map.put(data, index, data[index] + 1))
+  end
+
+  def next_index(index, data) do
+    case index == length(Map.keys(data)) do
+      true -> 1
+      false -> index + 1
+    end
+  end
+
+  def find_in([element | rest], element) do
+    rest
+  end
+
+  def find_in([_ | rest], element) do
+    find_in(rest, element)
+  end
+end
+
 defmodule Santa.Day1.Input do
   @doc false
   def input() do
@@ -1997,5 +2078,13 @@ defmodule Santa.Day5.Input do
 -1029
 -567
 -889"
+  end
+end
+
+defmodule Santa.Day6.Input do
+  @doc false
+  def input() do
+    %{1 => 4, 2 => 10, 3 => 4, 4 => 1, 5 => 8, 6 => 4, 7 => 9, 8 => 14,
+     9 => 5, 10 => 1, 11 => 14, 12 => 15, 13 => 0, 14 => 15, 15 => 3, 16 => 5}
   end
 end
