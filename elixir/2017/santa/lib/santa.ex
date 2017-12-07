@@ -396,7 +396,8 @@ defmodule Santa.Day6 do
   end
 
   def distribute(index, value, data) do
-    distribute(next_index(index, data), value - 1, Map.put(data, index, data[index] + 1))
+    distribute(next_index(index, data), value - 1,
+      Map.put(data, index, data[index] + 1))
   end
 
   def next_index(index, data) do
@@ -436,14 +437,13 @@ defmodule Santa.Day7 do
 
   @doc """
   iex> Santa.Day7.part_two()
-  :not_implemented
+  299
   """
   def part_two() do
-    lines = Santa.Day7.Input.input()
+    Santa.Day7.Input.input()
     |> String.split("\n")
-    {leaves, branches} = split_leaves_from_branches(lines, {[], []})
-    new_input = incorporate_leaves_to_branches(leaves, branches)
-    check_and_reduce(new_input)
+    |> split_leaves_from_branches({[], []})
+    |> check_and_reduce()
   end
 
   defp split_leaves_from_branches([], output) do
@@ -464,10 +464,10 @@ defmodule Santa.Day7 do
 
   defp extract_keyword_weight(key) do
     [keyword, "(" <> weight] = String.split(key, " ")
-    {keyword, String.to_integer(String.trim_trailing(weight, ")"))}
+    {keyword, {String.to_integer(String.trim_trailing(weight, ")")), 0}}
   end
 
-  defp incorporate_leaves_to_branches(leaves, branches) do
+  defp incorporate_leaves_to_branches({leaves, branches}) do
     {leaves, branches}
     Keyword.keys(leaves)
     |> Enum.reduce(branches, fn (key, dictionary) ->
@@ -477,27 +477,61 @@ defmodule Santa.Day7 do
             (other) -> other end)} end) end)
   end
 
-  defp check_and_reduce([{name, weight, list} | rest]) do
-    case all_filled(list) do
-      true ->
-        case check(list) do
-          :valid -> reduce(weight, list)
-          :invalid -> list
-        end
-      false -> list
+  defp check_and_reduce(elements) do
+    case incorporate_leaves_to_branches(elements)
+    |> check_and_reduce([], []) do
+      {:found, list} -> get_answer(list)
+      elements -> elements
+        |> check_and_reduce()
     end
   end
 
-  defp all_filled(_) do
-    false
+  defp check_and_reduce([], leaves, branches) do
+    {leaves, branches}
+  end
+
+  defp check_and_reduce([{name, weight, list} = element | rest], leaves,
+    branches) do
+    case check(list) do
+      :all_same -> check_and_reduce(rest,
+                     [reduce(name, weight, list) | leaves],
+                     branches)
+      :invalid -> {:found, list}
+      :not_done -> check_and_reduce(rest, leaves, [element | branches])
+    end
   end
 
   defp check(list) do
-    :valid
+    case Enum.all?(list, fn ({_, _}) -> true
+        (_) -> false end) do
+      true -> check_same_or_invalid(list)
+      false -> :not_done
+    end
   end
 
-  defp reduce(_, list) do
-    list
+  def check_same_or_invalid(list) do
+    {_, {a, b}} = hd(list)
+    case Enum.all?(list, fn({_, {x, y}}) -> x + y == a + b end) do
+      true -> :all_same
+      false -> :invalid
+    end
+  end
+
+  defp reduce(name, {x, y}, list) do
+    {_, {a, b}} = hd(list)
+    {name, {x, y + length(list) * (a + b)}}
+  end
+
+  defp get_answer(list) do
+    map = Enum.reduce(list, %{}, fn ({_, {x, y}}, dict) ->
+      Map.put(dict, x + y, [{x, y} | Map.get(dict, x + y, [])]) end)
+    [one, two] = Map.keys(map)
+    {wrong, good} = case length(Map.get(map, one)) do
+                      1 -> {one, two}
+                      _ -> {two, one}
+                    end
+    [{wrong_weight, wrong_rest}] = Map.get(map, wrong)
+    wrong_weight - (wrong_weight + wrong_rest - good)
   end
 end
 
