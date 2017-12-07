@@ -487,6 +487,18 @@ defmodule Santa.Day7 do
       false -> list
     end
   end
+
+  defp all_filled(_) do
+    false
+  end
+
+  defp check(list) do
+    :valid
+  end
+
+  defp reduce(_, list) do
+    list
+  end
 end
 
 defmodule Santa.Day1.Input do
