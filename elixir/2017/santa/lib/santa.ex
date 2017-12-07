@@ -428,8 +428,7 @@ defmodule Santa.Day7 do
     |> Enum.map(fn (line) -> [key, values] = String.split(line, " -> ")
       [right_key, _] = String.split(key, " ")
       right_values = String.split(values, ", ")
-      {right_key, right_values}
-    end)
+      {right_key, right_values} end)
     |> Enum.reduce({[], []}, fn ({key, values}, {all_keys, all_values}) ->
       {[key] ++ all_keys, values ++ all_values} end)
     Enum.find(all_keys, fn (key) -> not( key in all_values) end)
@@ -454,11 +453,12 @@ defmodule Santa.Day7 do
     split_leaves_from_branches(rest,
       case String.contains?(line, "->") do
         true ->
-          [key, values] = String.split(line, " -> ")
-        {keyword, weight} = extract_keyword_weight(key)
-        value_list = String.split(values, ", ")
-        {leaves, [ {keyword, weight, value_list} | branches]}
-        false -> {[extract_keyword_weight(line) | leaves], branches}
+            [key, values] = String.split(line, " -> ")
+            {keyword, weight} = extract_keyword_weight(key)
+            value_list = String.split(values, ", ")
+            {leaves, [{keyword, weight, value_list} | branches]}
+        false ->
+            {[extract_keyword_weight(line) | leaves], branches}
       end)
   end
 
@@ -471,18 +471,17 @@ defmodule Santa.Day7 do
     {leaves, branches}
     Keyword.keys(leaves)
     |> Enum.reduce(branches, fn (key, dictionary) ->
-      Enum.map(dictionary, fn ({branch, weight, list}) ->
-        {branch, weight, Enum.map(list, fn (^key) ->
-            List.keyfind(leaves, key, 0)
-            (other) -> other end)} end) end)
+         Enum.map(dictionary, fn ({branch, weight, list}) ->
+           {branch, weight, Enum.map(list,
+               fn (^key)  -> List.keyfind(leaves, key, 0)
+                  (other) -> other end)} end) end)
   end
 
   defp check_and_reduce(elements) do
     case incorporate_leaves_to_branches(elements)
     |> check_and_reduce([], []) do
       {:found, list} -> get_answer(list)
-      elements -> elements
-        |> check_and_reduce()
+      elements -> check_and_reduce(elements)
     end
   end
 
@@ -496,15 +495,15 @@ defmodule Santa.Day7 do
       :all_same -> check_and_reduce(rest,
                      [reduce(name, weight, list) | leaves],
                      branches)
-      :invalid -> {:found, list}
+      :invalid  -> {:found, list}
       :not_done -> check_and_reduce(rest, leaves, [element | branches])
     end
   end
 
   defp check(list) do
     case Enum.all?(list, fn ({_, _}) -> true
-        (_) -> false end) do
-      true -> check_same_or_invalid(list)
+                            (_)      -> false end) do
+      true  -> check_same_or_invalid(list)
       false -> :not_done
     end
   end
@@ -512,7 +511,7 @@ defmodule Santa.Day7 do
   def check_same_or_invalid(list) do
     {_, {a, b}} = hd(list)
     case Enum.all?(list, fn({_, {x, y}}) -> x + y == a + b end) do
-      true -> :all_same
+      true  -> :all_same
       false -> :invalid
     end
   end
