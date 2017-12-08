@@ -585,21 +585,27 @@ defmodule Santa.Day8 do
   defp evaluate(x, ">", y) do
     x > y
   end
+
   defp evaluate(x, ">=", y) do
     x >= y
   end
+
   defp evaluate(x, "==", y) do
     x == y
   end
+
   defp evaluate(x, "<", y) do
     x < y
   end
+
   defp evaluate(x, "<=", y) do
     x <= y
   end
+
   defp evaluate(x, "!=", y) do
     x != y
   end
+
   defp calculate(dictionary, reg, equation, value) do
     old_value = Map.get(dictionary, reg, 0)
     max = Map.get(dictionary, "maxmax", 0)

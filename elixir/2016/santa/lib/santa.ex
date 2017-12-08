@@ -287,7 +287,6 @@ defmodule Santa.Day14 do
   """
   def go_part_one do
     generate_keys(&calculate_md5/1)
-    #:all_wrong
   end
 
   @doc """
@@ -577,7 +576,6 @@ defmodule Santa.Day16 do
   end
 
   defp reverse(input) do
-#    reverse(input, <<>>)
     byte_reverse(input, <<>>)
   end
 
