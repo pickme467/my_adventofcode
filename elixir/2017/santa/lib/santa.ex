@@ -621,6 +621,134 @@ defmodule Santa.Day8 do
   end
 end
 
+defmodule Santa.Day9 do
+  @doc """
+  iex> Santa.Day9.part_one()
+  14190
+  """
+  def part_one() do
+    traverse(Santa.Day9.Input.input())
+  end
+
+  @doc """
+  iex> Santa.Day9.part_two()
+  7053
+  """
+  def part_two() do
+    traverse_for_waste(Santa.Day9.Input.input())
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day9.traverse('')
+  0
+
+  iex> Santa.Day9.traverse('<>')
+  0
+
+  iex> Santa.Day9.traverse('<<>')
+  0
+
+  iex> Santa.Day9.traverse('<!>>')
+  0
+
+  iex> Santa.Day9.traverse('<{o"i!a,<{i<a>')
+  0
+
+  iex> Santa.Day9.traverse('{}')
+  1
+
+  iex> Santa.Day9.traverse('{{{}}}')
+  6
+
+  iex> Santa.Day9.traverse('{{},{}}')
+  5
+
+  iex> Santa.Day9.traverse('{{<a!>},{<a!>},{<a!>},{<ab>}}')
+  3
+
+  iex> Santa.Day9.traverse('{{<!!>},{<!!>},{<!!>},{<!!>}}')
+  9
+
+  iex> Santa.Day9.traverse('{{{},{},{{}}}}')
+  16
+
+  iex> Santa.Day9.traverse('{{{},{},{{}}}},{{{},{},{{}}}}')
+  32
+
+  iex> Santa.Day9.traverse('{}<!!!>>{}')
+  2
+  """
+  def traverse(list) do
+    {depths, _} = traverse(list, 0, false, {0, 0})
+    depths
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day9.traverse_for_waste('<>')
+  0
+
+  iex> Santa.Day9.traverse_for_waste('<random characters>')
+  17
+
+  iex> Santa.Day9.traverse_for_waste('<<<<>')
+  3
+
+  iex> Santa.Day9.traverse_for_waste('<{!>}>')
+  2
+
+  iex> Santa.Day9.traverse_for_waste('<!!>')
+  0
+
+  iex> Santa.Day9.traverse_for_waste('<!!!>>')
+  0
+
+  iex> Santa.Day9.traverse_for_waste('<{o"i!a,<{i<a>')
+  10
+  """
+  def traverse_for_waste(list) do
+    {_, waste} = traverse(list, 0, false, {0, 0})
+    waste
+  end
+
+  defp traverse([], _, _, sum) do
+    sum
+  end
+
+  defp traverse([?!, _ | rest], depth, true, sum) do
+    traverse(rest, depth, true, sum)
+  end
+
+  defp traverse([?< | rest], depth, false, sum) do
+    traverse(rest, depth, true, sum)
+  end
+
+  defp traverse([?< | rest], depth, in_waste, {sum, waste}) do
+    traverse(rest, depth, in_waste, {sum, waste + 1})
+  end
+
+  defp traverse([?> | rest], depth, true, sum) do
+    traverse(rest, depth, false, sum)
+  end
+
+  defp traverse([_ | rest], depth, true, {sum, waste}) do
+    traverse(rest, depth, true, {sum, waste + 1})
+  end
+
+  defp traverse([?{ | rest], depth, false, sum) do
+    traverse(rest, depth + 1, false, sum)
+  end
+
+  defp traverse([?} | rest], depth, false, {sum, waste}) do
+    traverse(rest, depth - 1, false, {sum + depth, waste})
+  end
+
+  defp traverse([?, | rest], depth, in_waste, sum) do
+    traverse(rest, depth, in_waste, sum)
+  end
+end
+
 defmodule Santa.Day1.Input do
   @doc false
   def input() do
@@ -4792,5 +4920,4 @@ uoc inc -765 if yg != -1415
 bi inc 637 if nwe == -3005
 ih dec 369 if ih == 1993"
   end
-
 end
