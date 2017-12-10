@@ -749,6 +749,101 @@ defmodule Santa.Day9 do
   end
 end
 
+defmodule Santa.Day10 do
+  require Bitwise
+  @doc """
+  iex> Santa.Day10.part_one()
+  23715
+  """
+  def part_one() do
+    list = for a <- 0..255 do a end
+    {[one, two | _], _, _} = String.split(Santa.Day10.Input.input(), ",")
+    |> Enum.map(fn (x) -> String.to_integer(x) end)
+    |> update(list, 0, 0)
+    one * two
+  end
+
+  @doc """
+  iex> Santa.Day10.part_two()
+  "541dc3180fd4b72881e39cf925a50253"
+  """
+  def part_two() do
+    compute_hash(Santa.Day10.Input.input())
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day10.compute_hash("")
+  "a2582a3a0e66e6e86e3812dcb672a272"
+
+  iex> Santa.Day10.compute_hash("AoC 2017")
+  "33efeb34ea91902bb2f59c9920caa6cd"
+
+  iex> Santa.Day10.compute_hash("1,2,3")
+  "3efbe78a8d82f29979031a4aa0b16a9d"
+
+  iex> Santa.Day10.compute_hash("1,2,4")
+  "63960835bcdc130f0b66d7ff4f6a5a8e"
+  """
+  def compute_hash(input) do
+    list = for a <- 0..255 do a end
+    {output, _, _} = String.to_charlist(input) ++ [17, 31, 73, 47, 23]
+    |> update_x_times(list, 0, 0, 64)
+
+    Enum.chunk_every(output, 16)
+    |> Enum.map(fn (list) -> Enum.reduce(list, 0,
+       fn (x, a) -> Bitwise.bxor(x, a) end) end)
+    |> Enum.reduce("", fn(number, value) ->
+      {_, hex} =  String.split_at("0" <> Integer.to_string(number, 16), -2)
+      value <> hex end)
+    |> String.downcase()
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day10.updatetest([3], [0, 1, 2, 3, 4], 0, 0)
+  2
+
+  iex> Santa.Day10.updatetest([4], [2, 1, 0, 3, 4], 1, 3)
+  12
+
+  iex> Santa.Day10.updatetest([3, 4], [0, 1, 2, 3, 4], 0, 0)
+  12
+
+  iex> Santa.Day10.updatetest([1], [4, 3, 0, 1, 2], 2, 3)
+  12
+
+  iex> Santa.Day10.updatetest([3, 4, 1, 5], [0, 1, 2, 3, 4], 0, 0)
+  12
+  """
+  def updatetest(sequence, list, step, index) do
+    {[one, two | _], _, _} = update(sequence, list, step, index)
+    one * two
+  end
+
+  defp update([], list, step, index) do
+    {list, step, index}
+  end
+
+  defp update([current | sequence], list, step, index) do
+    {t, f} = Enum.split(list, index)
+    {sublist, rest} = Enum.split(f ++ t, current)
+    reversed = Enum.reverse(sublist) ++ rest
+    {front, tail} = Enum.split(reversed, length(list) - index)
+    update(sequence, tail ++ front, step + 1,
+      Integer.mod(index + current + step, length(list)))
+  end
+
+  defp update_x_times(_sequence, list, seq, index, 0) do
+    {list, seq, index}
+  end
+
+  defp update_x_times(sequence, list, seq, index, n) do
+    {new_list, new_seq, new_index} = update(sequence, list, seq, index)
+    update_x_times(sequence, new_list, new_seq, new_index, n - 1)
+  end
+end
+
 defmodule Santa.Day1.Input do
   @doc false
   def input() do
@@ -4919,5 +5014,11 @@ iyu inc 757 if hfh != 1479
 uoc inc -765 if yg != -1415
 bi inc 637 if nwe == -3005
 ih dec 369 if ih == 1993"
+  end
+end
+
+defmodule Santa.Day10.Input do
+  def input() do
+    "94,84,0,79,2,27,81,1,123,93,218,23,103,255,254,243"
   end
 end

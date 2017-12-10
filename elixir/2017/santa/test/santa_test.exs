@@ -9,4 +9,5 @@ defmodule SantaTest do
   doctest Santa.Day7
   doctest Santa.Day8
   doctest Santa.Day9
+  doctest Santa.Day10
 end
