@@ -957,24 +957,52 @@ defmodule Santa.Day12 do
   169
   """
   def part_one() do
-    map = String.split(Santa.Day12.Input.input(), "\n")
-      |> Enum.reduce(%{}, fn (line, map) ->
-      [key, values] = String.split(line, " <-> ")
-      Map.put(map, key, String.split(values, ", ")) end)
-      find_all_connected_to(MapSet.new(["0"]), map, 1)
+    create_map()
+    |> find_all_connected_to(MapSet.new(["0"]), 1)
+    |> MapSet.size()
   end
 
-  defp find_all_connected_to(all_connected, map, set_size) do
+  @doc """
+  iex> Santa.Day12.part_two()
+  179
+  """
+  def part_two() do
+    create_map()
+    |> find_and_remove([])
+    |> length()
+  end
+
+  defp create_map() do
+    String.split(Santa.Day12.Input.input(), "\n")
+    |> Enum.reduce(%{}, fn (line, map) ->
+      [key, values] = String.split(line, " <-> ")
+      Map.put(map, key, String.split(values, ", ")) end)
+  end
+
+  defp find_and_remove(map, sets) do
+    element = hd(Map.keys(map))
+    another_set = find_all_connected_to(map, MapSet.new([element]), 1)
+    new_map = Enum.reduce(MapSet.to_list(another_set), map,
+      fn(element, current_map) -> Map.delete(current_map, element) end)
+    case length(Map.keys(new_map)) > 0 do
+      true  -> find_and_remove(new_map, [another_set | sets])
+      false -> [another_set | sets]
+    end
+  end
+
+  defp find_all_connected_to(map, all_connected, set_size) do
     new_set = MapSet.new(
       Enum.reduce(MapSet.to_list(all_connected), [],
         fn (key, output) ->
-          Map.get(map, key) ++ output end))
+          case Map.get(map, key, :not_found) do
+            :not_found -> output
+            values -> values ++ output end end))
     new_all_connected = MapSet.union(all_connected, new_set)
     new_size = MapSet.size(new_all_connected)
     case  new_size > set_size do
       true ->
-        find_all_connected_to(new_all_connected, map, new_size)
-      false -> set_size
+        find_all_connected_to(map, new_all_connected, new_size)
+      false -> new_all_connected
     end
   end
 end
@@ -6397,7 +6425,7 @@ defmodule Santa.Day12.Input do
 1227 <-> 394, 496, 763, 1075, 1673
 1228 <-> 397
 1229 <-> 117, 1237
-1230 <-> 1435,<-> 385
+1230 <-> 1435, 1551, 1555
 1231 <-> 456, 1885
 1232 <-> 728
 1233 <-> 242, 601
