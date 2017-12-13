@@ -1011,11 +1011,7 @@ defmodule Santa.Day13 do
   788
   """
   def part_one() do
-    Santa.Day13.Input.input()
-    |> String.split("\n")
-    |> Enum.reduce(%{}, fn(line, map) ->
-      [index, depth] = String.split(line, ": ")
-      Map.put(map, String.to_integer(index), String.to_integer(depth)) end)
+    make_map()
     |> find_catching()
     |> Enum.reduce(0, fn ({a, b}, sum) -> a * b + sum end)
 
@@ -1026,13 +1022,8 @@ defmodule Santa.Day13 do
   3905748
   """
   def part_two() do
-    Santa.Day13.Input.input()
-    |> String.split("\n")
-    |> Enum.reduce(%{}, fn(line, map) ->
-      [index, depth] = String.split(line, ": ")
-      Map.put(map, String.to_integer(index), String.to_integer(depth)) end)
+    make_map()
     |> find_free_run()
-
   end
   @doc false
   @doc """
@@ -1056,6 +1047,14 @@ defmodule Santa.Day13 do
         end
     end)
     |> Enum.sort()
+  end
+
+  defp make_map() do
+    Santa.Day13.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce(%{}, fn(line, map) ->
+      [index, depth] = String.split(line, ": ")
+      Map.put(map, String.to_integer(index), String.to_integer(depth)) end)
   end
 
   defp is_caught(key, value) do
