@@ -1023,7 +1023,7 @@ defmodule Santa.Day13 do
 
   @doc """
   iex> Santa.Day13.part_two()
-  788
+  3905748
   """
   def part_two() do
     Santa.Day13.Input.input()
