@@ -850,14 +850,7 @@ defmodule Santa.Day11 do
   685
   """
   def part_one() do
-    {result, _} = String.split(Santa.Day11.Input.input(), ",")
-    |> Enum.map(fn ("s") -> :s
-      ("sw") -> :sw
-      ("se") -> :se
-      ("n") -> :n
-      ("ne") -> :ne
-      ("nw") -> :nw end)
-      |> walk(%{})
+    {result, _} = go_along_route()
     result
   end
 
@@ -866,14 +859,7 @@ defmodule Santa.Day11 do
   1457
   """
   def part_two() do
-    {_, result} = String.split(Santa.Day11.Input.input(), ",")
-    |> Enum.map(fn ("s") -> :s
-      ("sw") -> :sw
-      ("se") -> :se
-      ("n") -> :n
-      ("ne") -> :ne
-      ("nw") -> :nw end)
-      |> walk(%{})
+    {_, result} = go_along_route()
     result
   end
 
@@ -895,16 +881,27 @@ defmodule Santa.Day11 do
     elem(walk(route, map), 0)
   end
 
-  def walk(route, distance, furthest \\ 0)
-  def walk([], map, furthest) do
+  defp go_along_route() do
+    String.split(Santa.Day11.Input.input(), ",")
+    |> Enum.map(fn ("s") -> :s
+      ("sw") -> :sw
+      ("se") -> :se
+      ("n") -> :n
+      ("ne") -> :ne
+      ("nw") -> :nw end)
+      |> walk(%{})
+  end
+
+  defp walk(route, distance, furthest \\ 0)
+  defp walk([], map, furthest) do
     {reduce(map), furthest}
   end
 
-  def walk([where | rest], distance, furthest) do
+  defp walk([where | rest], distance, furthest) do
     walk(rest, update(where, distance), update_furthest(distance, furthest))
   end
 
-  def update_furthest(map, last_max) do
+  defp update_furthest(map, last_max) do
     new_max = reduce(map)
     Enum.max([last_max, new_max])
   end
