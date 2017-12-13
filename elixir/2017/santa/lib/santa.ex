@@ -1025,6 +1025,7 @@ defmodule Santa.Day13 do
     make_map()
     |> find_free_run()
   end
+
   @doc false
   @doc """
   iex> Santa.Day13.find_catching(%{1 => 1})
@@ -1049,14 +1050,6 @@ defmodule Santa.Day13 do
     |> Enum.sort()
   end
 
-  defp make_map() do
-    Santa.Day13.Input.input()
-    |> String.split("\n")
-    |> Enum.reduce(%{}, fn(line, map) ->
-      [index, depth] = String.split(line, ": ")
-      Map.put(map, String.to_integer(index), String.to_integer(depth)) end)
-  end
-
   defp is_caught(key, value) do
     value == 1
     or key == 0
@@ -1074,5 +1067,13 @@ defmodule Santa.Day13 do
       true -> index
       false -> find_free_run(map, index + 1)
     end
+  end
+
+  defp make_map() do
+    Santa.Day13.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce(%{}, fn(line, map) ->
+      [index, depth] = String.split(line, ": ")
+      Map.put(map, String.to_integer(index), String.to_integer(depth)) end)
   end
 end
