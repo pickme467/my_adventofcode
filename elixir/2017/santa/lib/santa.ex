@@ -1074,3 +1074,59 @@ defmodule Santa.Day13 do
       Map.put(map, String.to_integer(index), String.to_integer(depth)) end)
   end
 end
+
+defmodule Santa.Day14 do
+  @doc """
+  iex> Santa.Day14.part_one()
+  8190
+  """
+  def part_one() do
+    create_hash_grid()
+    |> Enum.reduce(0, fn (hex_string, sum) ->
+      calculate_hot_bits(hex_string) + sum end)
+  end
+
+  @doc """
+  iex> Santa.Day14.part_two()
+  8190
+  """
+  def part_two() do
+    create_hash_grid()
+    |> Enum.map(&make_sets/1)
+  end
+
+  defp create_hash_grid() do
+    for i <-0..127 do
+      make_row(i)
+    end
+    |> Enum.map(fn (x) -> Santa.Day10.compute_hash(x) end)
+  end
+
+  defp input() do
+    "ffayrhll"
+  end
+
+  defp make_row(index) do
+    input() <> "-" <> Integer.to_string(index)
+  end
+
+  def calculate_hot_bits(string) do
+    String.graphemes(string)
+    |> Enum.reduce(0, fn (hex, sum) ->
+      partial = String.to_integer(hex, 16)
+      |> Integer.to_string(2)
+      |> String.to_charlist()
+      |> Enum.reduce(0, fn (?1, sum) -> sum + 1
+        (_,  sum) -> sum end)
+      partial + sum end)
+  end
+
+  defp make_sets(string) do
+    String.graphemes(string)
+    |> Enum.reduce("", fn (hex, list) ->
+      partial = String.to_integer(hex, 16)
+      |> Integer.to_string(2)
+      |> String.pad_leading(4, "0")
+      list <> partial end)
+  end
+end
