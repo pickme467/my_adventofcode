@@ -6237,3 +6237,10 @@ defmodule Santa.Day13.Input do
 92: 17"
   end
 end
+
+defmodule Santa.Day15.Input do
+  @doc false
+  def input() do
+    {277, 349}
+  end
+end

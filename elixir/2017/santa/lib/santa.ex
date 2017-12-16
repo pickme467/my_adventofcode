@@ -1076,6 +1076,8 @@ defmodule Santa.Day13 do
 end
 
 defmodule Santa.Day14 do
+  require Bitwise
+
   @doc """
   iex> Santa.Day14.part_one()
   8190
@@ -1088,11 +1090,14 @@ defmodule Santa.Day14 do
 
   @doc """
   iex> Santa.Day14.part_two()
-  8190
+  1134
   """
   def part_two() do
     create_hash_grid()
     |> Enum.map(&make_sets/1)
+    |> Enum.map(&(String.to_integer(&1, 2)))
+    |> calculate_groups()
+    |> count_groups(0)
   end
 
   defp create_hash_grid() do
@@ -1110,7 +1115,7 @@ defmodule Santa.Day14 do
     input() <> "-" <> Integer.to_string(index)
   end
 
-  def calculate_hot_bits(string) do
+  defp calculate_hot_bits(string) do
     String.graphemes(string)
     |> Enum.reduce(0, fn (hex, sum) ->
       partial = String.to_integer(hex, 16)
@@ -1128,5 +1133,134 @@ defmodule Santa.Day14 do
       |> Integer.to_string(2)
       |> String.pad_leading(4, "0")
       list <> partial end)
+  end
+
+  defp calculate_groups(lines) do
+    Enum.reduce(lines, {%{}, 0}, fn (line, {map_set, index}) ->
+      {Map.put(map_set, index, get_sets(line)), index + 1} end)
+    |> elem(0)
+  end
+
+  defp get_sets(number)do
+    Integer.to_string(number, 2)
+    |> String.pad_leading(128, "0")
+    |> String.graphemes()
+    |> Enum.map(fn ("0") -> 0
+      ("1") -> 1 end)
+      |> Enum.reduce({[], 0},
+  fn (1, {list, index}) -> {[index | list], index + 1}
+    (_, {list, index}) -> {list, index + 1} end)
+    |> elem(0)
+    |> MapSet.new()
+  end
+
+  defp count_groups(map, index) do
+    case Map.size(map) do
+      0 -> index
+      _ ->
+        position = get_first(map)
+        traverse(map, position)
+        |> count_groups(index + 1)
+    end
+  end
+
+  defp traverse(map, {x, y}) when
+  x == -1 or y == -1 or x == 128 or y == 128
+  do
+    map
+  end
+
+  defp traverse(map, {x, y}) do
+    set = Map.get(map, y, MapSet.new())
+    case MapSet.member?(set, x) do
+      false -> map
+      true ->
+        remove_from_map(map, {x, y})
+        |> traverse({x + 1, y})
+        |> traverse({x - 1, y})
+        |> traverse({x, y + 1})
+        |> traverse({x, y - 1})
+    end
+  end
+
+  defp get_first(map) do
+    y = Map.keys(map)
+    |> hd()
+    x = Map.get(map, y)
+    |> MapSet.to_list()
+    |> hd()
+    {x, y}
+  end
+
+  defp remove_from_map(map, {x, y}) do
+    row = Map.get(map, y)
+    set = MapSet.delete(row, x)
+    case MapSet.size(set) do
+      0 -> Map.delete(map, y)
+      _ -> Map.put(map, y, set)
+    end
+  end
+end
+
+defmodule Santa.Day15 do
+  require Bitwise
+
+  @doc """
+  iex> Santa.Day15.part_one()
+  592
+  """
+  def part_one() do
+    {gen_a, gen_b} = Santa.Day15.Input.input()
+    Enum.reduce(1..40_000_000, {gen_a, gen_b, 0},
+      fn(_, {a, b, count}) ->
+        next_a = get_next(a, 16807)
+        next_b = get_next(b, 48271)
+        {next_a, next_b, judge(next_a, next_b) + count} end)
+    |> elem(2)
+  end
+
+  @doc """
+  iex> Santa.Day15.part_two()
+  320
+  """
+  def part_two() do
+    {gen_a, gen_b} = Santa.Day15.Input.input()
+    Enum.reduce(1..5_000_000, {gen_a, gen_b, 0},
+      fn(_, {a, b, count}) ->
+        next_a = get_next_divisible(a, 16807, 4)
+        next_b = get_next_divisible(b, 48271, 8)
+        {next_a, next_b, judge(next_a, next_b) + count} end)
+    |> elem(2)
+  end
+
+  @doc """
+  iex> Santa.Day15.get_next(65, 16807)
+  1092455
+
+  iex> Santa.Day15.get_next(1092455, 16807)
+  1181022009
+  """
+  def get_next(value, factor) do
+    Integer.mod(value * factor, 2147483647)
+  end
+
+  @doc """
+  iex> Santa.Day15.judge(245556042, 1431495498)
+  1
+  """
+  def judge(gen_a, gen_b) do
+    case Bitwise.band(gen_a, 0xFFFF) == Bitwise.band(gen_b, 0xFFFF)
+    do
+      true  -> 1
+      false -> 0
+    end
+  end
+
+  defp get_next_divisible(value, factor, divisor) do
+    next = get_next(value, factor)
+    case Bitwise.band(next, (divisor - 1)) do
+      0 -> next
+      _ -> get_next_divisible(next, factor, divisor)
+    end
   end
 end
