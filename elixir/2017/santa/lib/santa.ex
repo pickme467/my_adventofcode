@@ -1264,3 +1264,237 @@ defmodule Santa.Day15 do
     end
   end
 end
+
+defmodule Santa.Day16 do
+  @doc """
+  iex> Santa.Day16.part_one
+  'pkgnhomelfdibjac'
+  """
+  def part_one() do
+    Santa.Day16.Input.input()
+    |> String.split(",")
+    |> do_dance(make_programs())
+    |> Enum.sort()
+    |> Enum.map(fn ({_, letter}) -> letter end)
+  end
+
+  @doc """
+  noiex> Santa.Day16.part_two
+  'pkgnhomelfdibjac'
+  """
+  def part_two() do
+    mapper = Santa.Day16.Input.input()
+    |> String.split(",")
+    |> do_dance(make_programs())
+    |> Enum.reduce(%{},
+    fn ({index, letter}, map) -> Map.put(map, letter - ?a, index) end)
+    0..1_000_000_000
+    |> Enum.reduce(make_programs(), fn (_, program) ->
+      use_mapper(program, mapper) end)
+    |> Enum.sort()
+    |> Enum.map(fn ({_, letter}) -> letter end)
+  end
+
+  defp make_programs() do
+    for pos <-0..15 do
+      {pos, ?a + pos}
+    end
+  end
+
+  defp use_mapper(program, mapper) do
+    Enum.map(program, fn ({index, letter}) -> {mapper[index], letter} end)
+  end
+
+  defp do_dance(dance, programs) do
+    Enum.reduce(dance, programs,
+      fn ("s" <> number, sequence) ->
+        make_spin(number, sequence)
+      ("x" <> pair, sequence) ->
+        swap_positions(String.split(pair, "/"), sequence)
+      ("p" <> pair, sequence) ->
+        swap_programs(String.split(pair, "/"), sequence) end)
+  end
+
+  defp make_spin(number, sequence) do
+    n = String.to_integer(number)
+    {a, b} = Enum.sort(sequence)
+    |> Enum.split(-n)
+    b ++ a
+    |> Enum.reduce({0, []}, fn ({_, letter}, {index, output}) ->
+      {index + 1, [{index, letter} | output]} end)
+    |> elem(1)
+  end
+
+  defp swap_positions([index_a, index_b], sequence) do
+    index_a = String.to_integer(index_a)
+    index_b = String.to_integer(index_b)
+    {^index_a, program_a} = List.keyfind(sequence, index_a, 0)
+    {^index_b, program_b} = List.keyfind(sequence, index_b, 0)
+    List.keyreplace(sequence, index_a, 0, {index_a, program_b})
+    |> List.keyreplace(index_b, 0, {index_b, program_a})
+  end
+
+  defp swap_programs([program_a, program_b], sequence) do
+    [program_a] = String.to_charlist(program_a)
+    [program_b] = String.to_charlist(program_b)
+    {index_a, ^program_a}  = List.keyfind(sequence, program_a, 1)
+    {index_b, ^program_b} = List.keyfind(sequence, program_b, 1)
+    List.keyreplace(sequence, index_a, 0, {index_a, program_b})
+    |> List.keyreplace(index_b, 0, {index_b, program_a})
+  end
+end
+
+defmodule Santa.Day17 do
+  @doc """
+  iex> Santa.Day17.part_one
+  596
+  """
+  def part_one() do
+    1..2017
+    |> Enum.reduce([0], fn(n, list) -> iterate(list, 377, n) end)
+    |> tl()
+    |> hd()
+  end
+
+  @doc """
+  iex> Santa.Day17.part_two
+  :not_implemented
+  """
+  def part_two() do
+    1..50_000_000
+    |> Enum.reduce([0], fn(n, list) -> iterate(list, 377, n) end)
+    |> Enum.reduce(:not_found,
+      fn (0, _)         -> :next
+         (value, :next) -> {:found, value}
+         (_, result)    -> result
+    end)
+    |> elem(1)
+  end
+
+
+  @doc false
+  @doc """
+  iex> Santa.Day17.iterate([0], 3, 1)
+  [1, 0]
+
+  iex> Santa.Day17.iterate([1, 0], 3, 2)
+  [2, 1, 0]
+
+  iex> Santa.Day17.iterate([2, 1, 0], 3, 3)
+  [3, 1, 0, 2]
+
+  iex> Santa.Day17.iterate([3, 1, 0, 2], 3, 4)
+  [4, 3, 1, 0, 2]
+
+  iex> Santa.Day17.iterate([4, 3, 1, 0, 2], 3, 5)
+  [5, 2, 4, 3, 1, 0]
+
+  iex> Santa.Day17.iterate([8, 6, 1, 0, 5, 7, 2, 4, 3], 3, 9)
+  [9, 5, 7, 2, 4, 3, 8, 6, 1, 0]
+  """
+  def iterate(list, step, number) do
+    {a, b} = Enum.split(list, Integer.mod(step + 1, length(list)))
+    [number] ++ b ++ a
+  end
+end
+
+defmodule Santa.Day18 do
+  @doc """
+  iex> Santa.Day18.part_one
+  4601
+  """
+  def part_one() do
+    get_program()
+    |> execute(0, %{"receiver" => self()})
+  end
+
+  @doc """
+  iex> Santa.Day18.part_two
+  4601
+  """
+  def part_two() do
+    processors = [%{"p" => 0}, %{"p" => 1}]
+    execute(processors, 0, %{})
+  end
+
+  defp get_program() do
+    Santa.Day18.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce({0, %{}}, fn (line, {index, commands}) ->
+      {index + 1, Map.put(commands, index, line)} end)
+    |> elem(1)
+  end
+
+  defp execute(program, line, registers) do
+    case execute_command(program[line], line, registers) do
+      {:deadlock, result} -> result
+      {new_line, new_registers} -> execute(program, new_line, new_registers)
+    end
+  end
+
+  defp execute_command("set " <> details, line, registers) do
+    [register, value] = String.split(details, " ")
+    {line + 1, Map.put(registers, register, get_value(registers, value))}
+  end
+
+  defp execute_command("add " <> details, line, registers) do
+    [register, value] = String.split(details, " ")
+    {line + 1, Map.put(registers, register, get_value(registers, register) +
+       get_value(registers, value))}
+  end
+
+  defp execute_command("mul " <> details, line, registers) do
+    [register, value] = String.split(details, " ")
+    {line + 1, Map.put(registers, register, get_value(registers, register) *
+       get_value(registers, value))}
+  end
+
+  defp execute_command("mod " <> details, line, registers) do
+    [register, value] = String.split(details, " ")
+    {line + 1, Map.put(registers, register,
+       Integer.mod(get_value(registers, register),
+         get_value(registers, value)))}
+  end
+
+  defp execute_command("jgz " <> details, line, registers) do
+    [register, value] = String.split(details, " ")
+    guard =  get_value(registers, register)
+    jump =  get_value(registers, value)
+    case guard > 0 do
+      false -> {line + 1, registers}
+      true  -> {line + jump, registers}
+    end
+  end
+
+  defp execute_command("snd " <> details, line, registers) do
+    send(Map.get(registers, "receiver"), get_value(registers, details))
+    {line + 1,
+     Map.put(registers, "sound", get_value(registers, details))
+    |> Map.put("sent", Map.get(registers, "sent", 0) + 1)}
+  end
+
+  defp execute_command("rcv " <> details, line, registers) do
+    reg = get_value(registers, details)
+    case reg > 0 do
+      true  ->
+        receive do
+          value -> {line + 1, Map.put(registers, details, value)}
+        after
+          1_000 -> {:deadlock, Map.get(registers, "sound")}
+        end
+      false -> {line + 1, registers}
+    end
+  end
+
+  defp get_value(registers, key) do
+    Map.get(registers, key, string_to_integer(key))
+  end
+
+  defp string_to_integer(value) do
+    case String.starts_with?(value,
+          ["-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]) do
+      true  -> String.to_integer(value)
+      false -> 0
+    end
+  end
+end
