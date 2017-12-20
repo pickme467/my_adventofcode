@@ -1279,30 +1279,40 @@ defmodule Santa.Day16 do
   end
 
   @doc """
-  noiex> Santa.Day16.part_two
-  'pkgnhomelfdibjac'
+  iex> Santa.Day16.part_two
+  'pogbjfihclkemadn'
   """
   def part_two() do
-    mapper = Santa.Day16.Input.input()
+    dance = Santa.Day16.Input.input()
     |> String.split(",")
-    |> do_dance(make_programs())
-    |> Enum.reduce(%{},
-    fn ({index, letter}, map) -> Map.put(map, letter - ?a, index) end)
-    0..1_000_000_000
-    |> Enum.reduce(make_programs(), fn (_, program) ->
-      use_mapper(program, mapper) end)
+    programs = make_programs()
+    iterate(1, {%{programs => [0]}, programs, dance})
+  end
+
+  def iterate(1_000_000_000, {_, programs, _}) do
+    programs
     |> Enum.sort()
-    |> Enum.map(fn ({_, letter}) -> letter end)
+    |> Enum.map(fn({_, letter}) -> letter end)
+  end
+
+  def iterate(iteration, {cache, programs, dance}) do
+    next_programs = do_dance(dance, programs)
+    |> Enum.sort()
+    found_list = Map.get(cache, next_programs, [])
+    next_iteration =
+      case found_list do
+        [0] -> 1_000_000_000 - Integer.mod(1_000_000_000, iteration)
+        _   -> iteration + 1
+      end
+    iterate(next_iteration,
+      {Map.put(cache, next_programs, [iteration] ++ found_list),
+       next_programs, dance})
   end
 
   defp make_programs() do
     for pos <-0..15 do
       {pos, ?a + pos}
     end
-  end
-
-  defp use_mapper(program, mapper) do
-    Enum.map(program, fn ({index, letter}) -> {mapper[index], letter} end)
   end
 
   defp do_dance(dance, programs) do
