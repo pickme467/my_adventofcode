@@ -1368,19 +1368,40 @@ defmodule Santa.Day17 do
 
   @doc """
   iex> Santa.Day17.part_two
-  :not_implemented
+  39051595
   """
   def part_two() do
     1..50_000_000
-    |> Enum.reduce([0], fn(n, list) -> iterate(list, 377, n) end)
-    |> Enum.reduce(:not_found,
-      fn (0, _)         -> :next
-         (value, :next) -> {:found, value}
-         (_, result)    -> result
-    end)
+    |> Enum.reduce({0, 0}, fn(n, {current, last}) ->
+      next = next_insertion_index(n, current, 377)
+    case next do
+      1 -> {next, n}
+      _ -> {next, last}
+    end end)
     |> elem(1)
   end
 
+  @doc false
+  @doc """
+  iex> Santa.Day17.next_insertion_index(1, 0, 3)
+  1
+
+  iex> Santa.Day17.next_insertion_index(2, 1, 3)
+  1
+
+  iex> Santa.Day17.next_insertion_index(3, 1, 3)
+  2
+
+  iex> Santa.Day17.next_insertion_index(4, 2, 3)
+  2
+
+  iex> Santa.Day17.next_insertion_index(9, 6, 3)
+  1
+  """
+  def next_insertion_index(length, current, modulo) do
+    move = Integer.mod(modulo, length)
+    Integer.mod(move + current, length) + 1
+  end
 
   @doc false
   @doc """
@@ -1415,7 +1436,7 @@ defmodule Santa.Day18 do
   """
   def part_one() do
     get_program()
-    |> execute(0, %{"receiver" => self()})
+    |> execute(0, %{})
   end
 
   @doc """
@@ -1477,21 +1498,14 @@ defmodule Santa.Day18 do
   end
 
   defp execute_command("snd " <> details, line, registers) do
-    send(Map.get(registers, "receiver"), get_value(registers, details))
     {line + 1,
-     Map.put(registers, "sound", get_value(registers, details))
-    |> Map.put("sent", Map.get(registers, "sent", 0) + 1)}
+     Map.put(registers, "sound", get_value(registers, details))}
   end
 
   defp execute_command("rcv " <> details, line, registers) do
     reg = get_value(registers, details)
     case reg > 0 do
-      true  ->
-        receive do
-          value -> {line + 1, Map.put(registers, details, value)}
-        after
-          1_000 -> {:deadlock, Map.get(registers, "sound")}
-        end
+      true  -> {:deadlock, Map.get(registers, "sound")}
       false -> {line + 1, registers}
     end
   end
