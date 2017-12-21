@@ -1436,16 +1436,35 @@ defmodule Santa.Day18 do
   """
   def part_one() do
     get_program()
-    |> execute(0, %{})
+    |> execute(0, %{"snd_fn" => &sound_fun/3, "rcv_fn" => &recover_fun/3})
   end
 
   @doc """
   iex> Santa.Day18.part_two
-  4601
+  6858
   """
   def part_two() do
-    processors = [%{"p" => 0}, %{"p" => 1}]
-    execute(processors, 0, %{})
+    registers = %{"snd_fn" => &send_fun/3, "rcv_fn" => &receive_fun/3}
+    program = get_program()
+    p0 = Task.async(fn() ->
+      receive do
+        pid ->
+          execute(program, 0, Map.put(registers, "p", 0)
+          |> Map.put(:other, pid))
+      end
+    end)
+    p1 = Task.async(fn() ->
+      receive do
+        pid ->
+          execute(program, 0, Map.put(registers, "p", 1)
+          |> Map.put(:other, pid))
+      end
+    end)
+    send(p0.pid, p1.pid)
+    send(p1.pid, p0.pid)
+    [{^p0, {:ok, _count_p0}}, {^p1, {:ok, count_p1}}] =
+      Task.yield_many([p0, p1])
+    count_p1
   end
 
   defp get_program() do
@@ -1498,11 +1517,21 @@ defmodule Santa.Day18 do
   end
 
   defp execute_command("snd " <> details, line, registers) do
+    snd_fn = Map.get(registers, "snd_fn")
+    snd_fn.(details, line, registers)
+  end
+
+  defp execute_command("rcv " <> details, line, registers) do
+    rcv_fn = Map.get(registers, "rcv_fn")
+    rcv_fn.(details, line, registers)
+  end
+
+  defp sound_fun(details, line, registers) do
     {line + 1,
      Map.put(registers, "sound", get_value(registers, details))}
   end
 
-  defp execute_command("rcv " <> details, line, registers) do
+  defp recover_fun(details, line, registers) do
     reg = get_value(registers, details)
     case reg > 0 do
       true  -> {:deadlock, Map.get(registers, "sound")}
@@ -1519,6 +1548,21 @@ defmodule Santa.Day18 do
           ["-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]) do
       true  -> String.to_integer(value)
       false -> 0
+    end
+  end
+
+  defp send_fun(value, line, registers) do
+    other_pid = Map.get(registers, :other)
+    send(other_pid, get_value(registers, value))
+    {line + 1,
+     Map.put(registers, :counter, Map.get(registers, :counter, 0) + 1)}
+  end
+
+  defp receive_fun(register, line, registers) do
+    receive do
+      value -> {line + 1, Map.put(registers, register, value)}
+    after
+      500 -> {:deadlock, Map.get(registers, :counter, 0)}
     end
   end
 end
