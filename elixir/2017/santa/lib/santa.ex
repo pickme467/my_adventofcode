@@ -1446,20 +1446,8 @@ defmodule Santa.Day18 do
   def part_two() do
     registers = %{"snd_fn" => &send_fun/3, "rcv_fn" => &receive_fun/3}
     program = get_program()
-    p0 = Task.async(fn() ->
-      receive do
-        pid ->
-          execute(program, 0, Map.put(registers, "p", 0)
-          |> Map.put(:other, pid))
-      end
-    end)
-    p1 = Task.async(fn() ->
-      receive do
-        pid ->
-          execute(program, 0, Map.put(registers, "p", 1)
-          |> Map.put(:other, pid))
-      end
-    end)
+    p0 = Task.async(fn() -> receive_then_execute(program, registers, 0) end)
+    p1 = Task.async(fn() -> receive_then_execute(program, registers, 1) end)
     send(p0.pid, p1.pid)
     send(p1.pid, p0.pid)
     [{^p0, {:ok, _count_p0}}, {^p1, {:ok, count_p1}}] =
@@ -1473,6 +1461,14 @@ defmodule Santa.Day18 do
     |> Enum.reduce({0, %{}}, fn (line, {index, commands}) ->
       {index + 1, Map.put(commands, index, line)} end)
     |> elem(1)
+  end
+
+  defp receive_then_execute(program, registers, processor_id) do
+    receive do
+      pid ->
+        execute(program, 0, Map.put(registers, "p", processor_id)
+        |> Map.put(:other, pid))
+    end
   end
 
   defp execute(program, line, registers) do
