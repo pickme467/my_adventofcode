@@ -1562,3 +1562,123 @@ defmodule Santa.Day18 do
     end
   end
 end
+
+defmodule Santa.Day19 do
+  @doc """
+  iex> Santa.Day19.part_one()
+  "DWNBGECOMY"
+  """
+  def part_one() do
+    table = put_in_dictionary()
+    follow({:down, find_start(table)}, table, {[], 0, 1})
+    |> elem(0)
+    |> Enum.reverse()
+    |> Enum.join()
+  end
+
+  @doc """
+  iex> Santa.Day19.part_two()
+  17228
+  """
+  def part_two() do
+    table = put_in_dictionary()
+    follow({:down, find_start(table)}, table, {[], 0, 1})
+    |> elem(1)
+  end
+
+  def put_in_dictionary() do
+    Santa.Day19.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce({0, %{}}, fn (line, {index, table}) ->
+      {index + 1, put_line_in(table, index, line)} end)
+    |> elem(1)
+  end
+
+  defp put_line_in(table, y, line) do
+    line
+    |> String.graphemes()
+    |> Enum.reduce({0, table}, fn (" ", {x, table}) ->
+      {x + 1, table}
+      (sign, {x, table}) -> {x + 1, Map.put(table, {x, y}, sign)} end)
+    |> elem(1)
+  end
+
+  defp find_start(table) do
+    Map.keys(table)
+    |> Enum.filter(fn ({_, 0}) -> true
+      (_) -> false end)
+    |> hd()
+  end
+
+  defp follow(current_direction, table, found_letters) do
+    next = get_next(current_direction)
+    updated_direction = update_direction(next, table)
+    {direction, _} = updated_direction
+    case direction do
+      :not_found -> found_letters
+      _ ->
+        follow(updated_direction, table,
+          capture_letter(next, table, found_letters))
+    end
+  end
+
+  defp get_next({:down, {x, y}}) do
+    {:down, {x, y + 1}}
+  end
+
+  defp get_next({:up, {x, y}}) do
+    {:up, {x, y - 1}}
+  end
+
+  defp get_next({:left, {x, y}}) do
+    {:left, {x - 1, y}}
+  end
+
+  defp get_next({:right, {x, y}}) do
+    {:right, {x + 1, y}}
+  end
+
+  defp update_direction({direction, coordinate}, table) do
+    case Map.get(table, coordinate, :not_found) do
+      "+" -> find_direction({direction, coordinate}, table)
+      :not_found -> {:not_found, coordinate}
+      _   -> {direction, coordinate}
+    end
+  end
+
+  defp find_direction({direction, coordinate}, table)
+  when direction in [:up, :down] do
+    {left_or_right(coordinate, table), coordinate}
+  end
+
+  defp find_direction({_direction, coordinate}, table) do
+    {up_or_down(coordinate, table), coordinate}
+  end
+
+  defp left_or_right({x, y}, table) do
+    case {Map.get(table, {x + 1, y}, :not_found),
+          Map.get(table, {x - 1, y}, :not_found)} do
+      {:not_found, :not_found} -> :not_found
+      {:not_found, _} -> :left
+      _ -> :right
+    end
+  end
+
+  defp up_or_down({x, y}, table) do
+    case {Map.get(table, {x, y + 1}, :not_found),
+            Map.get(table, {x, y - 1}, :not_found)} do
+      {:not_found, :not_found} -> :not_found
+      {:not_found, _} -> :up
+      _ -> :down
+    end
+  end
+
+  defp capture_letter({_direction, coordinate}, table,
+    {found_letters, last, current}) do
+    element = Map.get(table, coordinate)
+    case not element in ["|", "-", "+"] do
+      true -> {[element | found_letters], current + 1, current + 1}
+      false -> {found_letters, last, current + 1}
+    end
+  end
+end
