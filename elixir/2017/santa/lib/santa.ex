@@ -1682,3 +1682,102 @@ defmodule Santa.Day19 do
     end
   end
 end
+
+defmodule Santa.Day20 do
+  @doc """
+  iex> Santa.Day20.part_one()
+  308
+  """
+  def part_one() do
+    make_list_of_lists()
+    |> Enum.map(fn (particle) ->
+      {nx, ny, nz} = next_position(100_000, particle)
+      Enum.sum([abs(nx), abs(ny), abs(nz)]) end)
+      |> Enum.reduce({0, -1, 35000003849995201},
+      fn (number, {index, index_min, min}) ->
+      case number < min do
+        true -> {index + 1, index, number}
+        false -> {index + 1, index_min, min}
+      end end)
+      |> elem(1)
+  end
+
+  @doc """
+  iex> Santa.Day20.part_two()
+  504
+  """
+  def part_two() do
+    make_list_of_lists()
+    |> Enum.reduce({0, %{}}, fn (list_of_three, {index, dictionary}) ->
+      {index + 1, Map.put(dictionary, index, list_of_three)} end)
+    |> elem(1)
+    |> reduce(1, 0)
+    |> Map.keys()
+    |> length()
+  end
+
+  defp reduce(dictionary, iteration, not_reduced_since) do
+    case not_reduced_since > 40 do
+      true -> dictionary
+      false ->
+        new_dictionary = Map.keys(dictionary)
+        |> Enum.reduce(%{}, fn (key, output) ->
+          position = next_position(iteration, Map.get(dictionary, key))
+          Map.put(output, position, [key] ++ Map.get(output, position, [])) end)
+        |> Map.values()
+        |> Enum.filter(fn(list) -> length(list) > 1 end)
+        |> List.flatten()
+        |> Enum.reduce(dictionary, fn (key, new_dict) ->
+          Map.delete(new_dict, key) end)
+        case length(Map.keys(dictionary)) > length(Map.keys(new_dictionary)) do
+          true -> reduce(new_dictionary, iteration + 1, 0)
+          false -> reduce(new_dictionary, iteration + 1, not_reduced_since + 1)
+        end
+    end
+  end
+
+  defp make_list_of_lists() do
+    Santa.Day20.Input.input()
+    |> String.split("\n")
+    |> Enum.map(fn (line) ->
+      String.split(line, ["p=<", ">, ", "v=<", "a=<", ">"])
+      |> Enum.filter(fn ("") -> false
+        (_) -> true end)
+        |> Enum.map(fn (numbers) ->
+      String.split(numbers, ",")
+      |> Enum.map(&String.to_integer/1) end)
+    end)
+  end
+
+  defp next_position(iteration, particle) do
+    [[xp, yp, zp], [xv, yv, zv], [xa, ya, za]] = particle
+    nx = compute_iteration(iteration, xp, xv, xa)
+    ny = compute_iteration(iteration, yp, yv, ya)
+    nz = compute_iteration(iteration, zp, zv, za)
+    {nx, ny, nz}
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day20.compute_iteration(1, 1, 1, 0)
+  2
+
+  iex> Santa.Day20.compute_iteration(2, 1, 1, 0)
+  3
+
+  iex> Santa.Day20.compute_iteration(1, 3, 2, -1)
+  4
+
+  iex> Santa.Day20.compute_iteration(2, 3, 2, -1)
+  4
+
+  iex> Santa.Day20.compute_iteration(3, 3, 2, -1)
+  3
+  """
+  def compute_iteration(iteration, position, velocity, acceleration) do
+    start_velocity = velocity + acceleration
+    end_velocity = velocity + (iteration) * acceleration
+    sum_velocity = round(iteration * (start_velocity + end_velocity) / 2)
+    position + sum_velocity
+  end
+end
