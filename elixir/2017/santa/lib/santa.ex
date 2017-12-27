@@ -1964,3 +1964,174 @@ defmodule Santa.Day21 do
     |> Enum.map(&Enum.reverse/1)
   end
 end
+
+defmodule Santa.Day22 do
+  @doc """
+  iex> Santa.Day22.part_one
+  5240
+  """
+  def part_one() do
+    {start, map} = get_input(Santa.Day22.Input.input())
+    1..10000
+    |> Enum.reduce({start, map, 0}, fn (_, {point, map, infected}) ->
+      move(point, map, infected) end)
+    |> elem(2)
+  end
+
+  @doc """
+  iex> Santa.Day22.part_two
+  2512144
+  """
+  def part_two() do
+    {start, map} = get_input(Santa.Day22.Input.input())
+    1..10_000_000
+    |> Enum.reduce({start, map, 0}, fn (_, {point, map, infected}) ->
+      extended_move(point, map, infected) end)
+    |> elem(2)
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day22.test(70)
+  41
+
+  iex> Santa.Day22.test(10_000)
+  5587
+  """
+  def test(number) do
+    {start, map} = get_input("..#\n#..\n...")
+    1..number
+    |> Enum.reduce({start, map, 0}, fn (_, {point, map, infected}) ->
+      move(point, map, infected) end)
+    |> elem(2)
+  end
+
+  defp get_input(input) do
+    list = String.split(input, "\n")
+    map = list
+    |> Enum.reduce({{0, 0}, %{}}, fn (line, coordinates_and_map) ->
+      {{_, y}, map} = String.graphemes(line)
+      |> Enum.reduce(coordinates_and_map, fn ("#", {{x, y}, map}) ->
+        {{x + 1, y}, infect({:up, {x, y}}, map)}
+        (_, {{x, y}, map}) -> {{x + 1, y}, map} end)
+      {{0, y + 1}, map} end)
+    |> elem(1)
+    {{:up, {round(Float.floor(String.length(hd(list)) / 2)) ,
+      round(Float.floor(length(list) / 2))}}, map}
+  end
+
+  defp extended_move(start, map, made_infected) do
+    {new_direction(start, map), update_current_spot(start, map),
+     update_infected(start, map, made_infected)}
+  end
+
+  defp new_direction({current, position}, map) do
+    case Map.get(map, position, :clean) do
+      :clean -> turn_left({current, position})
+      :weakened -> move_straight({current, position})
+      :infected -> turn_right({current, position})
+      :flagged -> move_back({current, position})
+    end
+  end
+
+  defp update_current_spot({_, position}, map) do
+    case Map.get(map, position, :clean) do
+      :clean -> Map.put(map, position, :weakened)
+      :weakened -> Map.put(map, position, :infected)
+      :infected -> Map.put(map, position, :flagged)
+      :flagged -> Map.delete(map, position)
+    end
+  end
+
+  defp update_infected({_, position}, map, infected) do
+    case Map.get(map, position, :clean) == :weakened do
+      true -> infected + 1
+      false -> infected
+    end
+  end
+
+  defp move(start, map, made_infected) do
+    case is_infected(start, map) do
+      false ->
+        {turn_left(start), infect(start, map), made_infected + 1}
+      true  ->
+        {turn_right(start), clean(start, map), made_infected}
+    end
+  end
+
+  defp is_infected({_,key}, map) do
+    Map.get(map, key, :clean) == :infected
+  end
+
+  defp infect({_, key}, map) do
+    Map.put(map, key, :infected)
+  end
+
+  defp clean({_, key}, map) do
+    Map.delete(map, key)
+  end
+
+  defp turn_right({:up, {x, y}}) do
+    {:right, {x + 1, y}}
+  end
+
+  defp turn_right({:right, {x, y}}) do
+    {:down, {x, y + 1}}
+  end
+
+  defp turn_right({:down, {x, y}}) do
+    {:left, {x - 1, y}}
+  end
+
+  defp turn_right({:left, {x, y}}) do
+    {:up, {x, y - 1}}
+  end
+
+  defp turn_left({:up, {x, y}}) do
+    {:left, {x - 1, y}}
+  end
+
+  defp turn_left({:left, {x, y}}) do
+    {:down, {x, y + 1}}
+  end
+
+  defp turn_left({:down, {x, y}}) do
+    {:right, {x + 1, y}}
+  end
+
+  defp turn_left({:right, {x, y}}) do
+    {:up, {x, y - 1}}
+  end
+
+  defp move_straight({:up, {x, y}}) do
+    {:up, {x, y - 1}}
+  end
+
+  defp move_straight({:right, {x, y}}) do
+    {:right, {x + 1, y}}
+  end
+
+  defp move_straight({:down, {x, y}}) do
+    {:down, {x, y + 1}}
+  end
+
+  defp move_straight({:left, {x, y}}) do
+    {:left, {x - 1, y}}
+  end
+
+  defp move_back({:up, {x, y}}) do
+    {:down, {x, y + 1}}
+  end
+
+  defp move_back({:right, {x, y}}) do
+    {:left, {x - 1, y}}
+  end
+
+  defp move_back({:down, {x, y}}) do
+    {:up, {x, y - 1}}
+  end
+
+  defp move_back({:left, {x, y}}) do
+    {:right, {x + 1, y}}
+  end
+end
