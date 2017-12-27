@@ -2135,3 +2135,107 @@ defmodule Santa.Day22 do
     {:right, {x + 1, y}}
   end
 end
+
+defmodule Santa.Day23 do
+  @doc """
+  iex> Santa.Day23.part_one()
+  5929
+  """
+  def part_one() do
+    program = get_program()
+    registers = %{:mul => 0}
+    execute(program, 0, registers)
+    |> Map.get(:mul)
+  end
+
+  @doc """
+  iex> Santa.Day23.part_two()
+  907
+  """
+  def part_two() do
+    b_register = 107900
+    c_register = 124900
+    step = 17
+    for i <- b_register..c_register,
+      Integer.mod(i - b_register, step) == 0 do i end
+    |> Enum.filter(&not_prime/1)
+    |> length()
+  end
+
+  defp not_prime(number) do
+    not is_prime(number, 2)
+  end
+
+  defp is_prime(number, divider) when divider * 2 > number do
+    true
+  end
+
+  defp is_prime(number, divider) do
+    case Integer.mod(number, divider) == 0 do
+      true -> false
+      false -> is_prime(number, divider + 1)
+    end
+  end
+
+  defp get_program() do
+    Santa.Day23.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce({0, %{}}, fn (line, {index, commands}) ->
+      {index + 1, Map.put(commands, index, line)} end)
+    |> elem(1)
+  end
+
+  defp execute(program, line, registers) do
+    case execute_command(program[line], line, registers, program) do
+      {:stop, result} -> result
+      {new_line, new_registers} ->
+        execute(program, new_line, new_registers)
+    end
+  end
+
+  defp execute_command("set " <> details, line, registers, program) do
+    [register, value] = String.split(details, " ")
+    {validate(program, line + 1) , Map.put(registers, register,
+        get_value(registers, value))}
+  end
+
+  defp execute_command("sub " <> details, line, registers, program) do
+    [register, value] = String.split(details, " ")
+    {validate(program, line + 1), Map.put(registers, register,
+       get_value(registers, register) - get_value(registers, value))}
+  end
+
+  defp execute_command("mul " <> details, line, registers, program) do
+    [register, value] = String.split(details, " ")
+    {validate(program, line + 1), Map.put(registers, register,
+       get_value(registers, register) * get_value(registers, value))
+       |> Map.put(:mul, Map.get(registers, :mul) + 1)}
+  end
+
+  defp execute_command("jnz " <> details, line, registers, program) do
+    [register, value] = String.split(details, " ")
+    case get_value(registers, register) do
+      0 -> {validate(program, line + 1), registers}
+      _ -> {validate(program, line + get_value(registers, value)), registers}
+    end
+  end
+
+  defp validate(program, line) do
+    case Map.get(program, line, :not_found) do
+      :not_found -> :stop
+      _ -> line
+    end
+  end
+
+  defp get_value(registers, key) do
+    Map.get(registers, key, string_to_integer(key))
+  end
+
+  defp string_to_integer(value) do
+    case String.starts_with?(value,
+          ["-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]) do
+      true  -> String.to_integer(value)
+      false -> 0
+    end
+  end
+end
