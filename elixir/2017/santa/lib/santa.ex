@@ -1781,3 +1781,186 @@ defmodule Santa.Day20 do
     position + sum_velocity
   end
 end
+
+defmodule Santa.Day21 do
+  @doc """
+  iex> Santa.Day21.part_one()
+  167
+  """
+  def part_one() do
+    iterate(5)
+  end
+
+  @doc """
+  noiex> Santa.Day21.part_two()
+  2425195
+  """
+  def part_two() do
+    iterate(18)
+  end
+
+  defp iterate(number) do
+    transformations = make_transformations()
+    1..number
+    |> Enum.reduce(".#.\n..#\n###", fn(_, input) ->
+      transform(input, transformations) end)
+    |> String.graphemes()
+    |> Enum.map(fn ("#") -> 1
+      (_) -> 0 end)
+    |> Enum.sum()
+  end
+
+  defp make_transformations() do
+    Santa.Day21.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce(%{}, fn (line, dictionary) ->
+      [input, output] = String.split(line, " => ")
+      Map.put(dictionary, make_hashes(input), output)
+    end)
+  end
+
+  defp transform(input, transformations) do
+    split(input)
+    |> Enum.map(fn (key) ->
+      Map.get(transformations, key, :not_found) end)
+    |> merge()
+  end
+
+  defp split(input) do
+    side = round(:math.sqrt(String.length(
+              String.replace(input, ["\n", "/"], ""))))
+    case Integer.mod(side, 2) == 0 do
+      true -> split_by(2, input)
+      false -> split_by(3, input)
+    end
+  end
+
+  defp split_by(number, input) do
+    input
+    |> String.split(["\n", "/"])
+    |> Enum.map(fn (line) -> String.graphemes(line)
+    |> Enum.chunk_every(number) end)
+    |> do_split(number, [])
+    |> Enum.map(&make_hashes/1)
+  end
+
+  defp do_split([], _, output) do
+    Enum.reverse(output)
+  end
+
+  defp do_split([[a | ra], [b | rb], [c | rc] | rest], 3,
+    output) do
+    swapped = [[a, b, c]]
+    case ra == [] do
+      true  -> do_split(rest, 3,  swapped ++ output)
+      false -> do_split([ra, rb, rc | rest], 3, swapped ++ output)
+    end
+  end
+
+  defp do_split([[a | ra], [b | rb] | rest], 2, output) do
+    swapped = [[a, b]]
+    case ra == [] do
+      true  -> do_split(rest, 2,  swapped ++ output)
+      false -> do_split([ra, rb | rest], 2, swapped ++ output)
+    end
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day21.merge(["#./#.", "../.#", "../##", "##/.."])
+  "#.../#..#/..##/##.."
+  """
+  def merge(list) do
+    side = round(:math.sqrt(String.length(
+              String.replace(hd(list), ["\n", "/"], "")))) *
+              round(:math.sqrt(length(list)))
+    Enum.map(list, fn (lines) ->
+      String.split(lines, ["\n", "/"]) end)
+    |> merge_to(side, side, [], "")
+  end
+
+  defp merge_to([], _, _, [], output) do
+    String.trim_trailing(output, "/")
+  end
+
+  defp merge_to([], side, total_side, rest, output) do
+    merge_to(Enum.reverse(rest), side, total_side, [], output)
+  end
+
+  defp merge_to([[substring | sub_tail] | tail],
+    side, total_side, rest, output) do
+    new_rest = case sub_tail == [] do
+                 true  -> rest
+                 false -> [sub_tail] ++ rest
+               end
+    new_output = output <> substring
+    case side - String.length(substring) == 0 do
+                false -> merge_to(tail, side - String.length(substring),
+                                    total_side, new_rest, new_output)
+                true  -> merge_to(Enum.reverse(new_rest) ++ tail, total_side,
+                           total_side, [], new_output <> "/")
+    end
+  end
+
+
+  @doc """
+  iex> Santa.Day21.make_hash([["#", "."], ["#", "#"]])
+  [4, 3, 1, 4]
+  """
+  def make_hash(list_of_graphemes) do
+    list = list_of_graphemes
+    |> List.flatten()
+    list
+    |> Enum.reduce({1, [length(list)]},
+    fn ("#", {index, output}) -> {index + 1, [index] ++ output}
+      (_, {index, output}) -> {index + 1, output} end)
+    |> elem(1)
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day21.make_hashes("##.\\n#..\\n###")
+  [9, 8, 7, 6, 4, 3, 9]
+
+  iex> Santa.Day21.make_hashes("##./#../###")
+  [9, 8, 7, 6, 4, 3, 9]
+
+  iex> Santa.Day21.make_hashes("#.\\n#.")
+  [4, 3, 4]
+
+  iex> Santa.Day21.make_hashes(".#./..#/###")
+  [9, 8, 7, 6, 2, 9]
+
+  iex> Santa.Day21.make_hashes(".##/#.#/#..")
+  [9, 8, 6, 4, 1, 9]
+  """
+  def make_hashes(list_of_graphemes) when is_list(list_of_graphemes) do
+    1..4
+    |> Enum.reduce({list_of_graphemes, []}, fn (_, {list, accumulator}) ->
+                     {rotate(list),
+                      [make_hash(list), make_hash(flip(list))] ++ accumulator}
+                   end)
+    |> elem(1)
+    |> Enum.max()
+  end
+
+  def make_hashes(string) do
+    string
+    |> String.split(["\n", "/"])
+    |> Enum.map(&String.graphemes/1)
+    |> make_hashes()
+  end
+
+  defp rotate([[l11, l12, l13], [l21, l22, l23], [l31, l32, l33]]) do
+    [[l13, l23, l33], [l12, l22, l32], [l11, l21, l31]]
+  end
+
+  defp rotate([[l11, l12], [l21, l22]]) do
+    [[l12, l22], [l11, l21]]
+  end
+
+  defp flip(list_of_lists) do
+    list_of_lists
+    |> Enum.map(&Enum.reverse/1)
+  end
+end

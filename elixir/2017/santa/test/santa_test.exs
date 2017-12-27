@@ -20,4 +20,5 @@ defmodule SantaTest do
   doctest Santa.Day18
   doctest Santa.Day19
   doctest Santa.Day20
+  doctest Santa.Day21
 end
