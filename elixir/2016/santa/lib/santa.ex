@@ -755,3 +755,97 @@ defmodule Santa.Day16 do
     to_list([a | list], rest)
   end
 end
+
+defmodule Santa.Day17 do
+  @doc """
+  iex> Santa.Day17.part_one()
+  "RLDUDRDDRR"
+  """
+  def part_one() do
+    walk({0, 0}, input(), "", [])
+    |> hd()
+  end
+
+  @doc """
+  iex> Santa.Day17.part_two()
+  590
+  """
+  def part_two() do
+    walk({0, 0}, input(), "", [])
+    |> Enum.reverse()
+    |> hd()
+    |> String.length()
+  end
+
+  defp input() do
+    "mmsxrhfx"
+  end
+
+  defp calculate_md5(input) do
+    Santa.Day14.calculate_md5(input)
+  end
+
+  defp walk({3, 3}, _, path, found) do
+    [path] ++ found
+    |> Enum.map(fn (string) -> {String.length(string), string} end)
+    |> Enum.sort()
+    |> Enum.map(fn (tuple) -> elem(tuple, 1) end)
+  end
+
+  defp walk(coordinates, input, path, found) do
+    directions = get_directions(coordinates, input)
+    case directions == [] do
+      true -> found
+      false -> Enum.reduce(directions, found,
+          fn ({coordinates, step}, found) ->
+            walk(coordinates, input <> step, path <> step, found)
+          end)
+    end
+  end
+
+  defp get_directions({x, y}, input) do
+    [up, down, left, right | _] = String.graphemes(calculate_md5(input))
+    get_up(up, {x, y}) ++ get_down(down, {x, y}) ++
+      get_left(left, {x, y}) ++ get_right(right, {x, y})
+  end
+
+  defp is_open(letter) do
+    letter in ["b", "c", "d", "e", "f"]
+  end
+
+  def get_up(_, {_, 0}) do [] end
+
+  def get_up(letter, {x, y}) do
+    case is_open(letter) do
+      false -> []
+      true  ->  [{{x, y - 1}, "U"}]
+    end
+  end
+
+  def get_down(_, {_, 3}) do [] end
+
+  def get_down(letter, {x, y}) do
+    case is_open(letter) do
+      false -> []
+      true  ->  [{{x, y + 1}, "D"}]
+    end
+  end
+
+  def get_left(_, {0, _}) do [] end
+
+  def get_left(letter, {x, y}) do
+    case is_open(letter) do
+      false -> []
+      true  ->  [{{x - 1, y}, "L"}]
+    end
+  end
+
+  def get_right(_, {3, _}) do [] end
+
+  def get_right(letter, {x, y}) do
+    case is_open(letter) do
+      false -> []
+      true  ->  [{{x + 1, y}, "R"}]
+    end
+  end
+end
