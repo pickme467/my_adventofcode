@@ -849,3 +849,59 @@ defmodule Santa.Day17 do
     end
   end
 end
+
+defmodule Santa.Day18 do
+  @doc """
+  iex> Santa.Day18.part_one()
+  1939
+  """
+  def part_one() do
+    iterate(40)
+  end
+
+  @doc """
+  iex> Santa.Day18.part_two()
+  19999535
+  """
+  def part_two() do
+    iterate(400_000)
+  end
+
+  defp iterate(number) do
+    row = input()
+    |> String.graphemes()
+    |> Enum.map(fn ("^") -> 1
+      (_) -> 0 end)
+    2..number
+    |> Enum.reduce({row, count_safe(row)}, fn (_, {row, made}) ->
+      next_row = make_next_row([0] ++ row ++ [0], [])
+      {next_row, count_safe(next_row) + made} end)
+    |> elem(1)
+  end
+
+  defp input() do
+    ".^^^.^.^^^^^..^^^..^..^..^^..^.^.^.^^.^^....^.^" <>
+      "...^.^^.^^.^^..^^..^.^..^^^.^^...^...^^....^^.^^^^^^^"
+  end
+
+  defp count_safe(list) do
+    list
+    |> Enum.filter(fn (0) -> true
+      (1) -> false end)
+    |> length()
+  end
+
+  defp make_next_row([a, b, c | rest], row) do
+    new_row = case (a == 1 and b == 1 and c == 0) or
+    (a == 0 and b == 1 and c == 1) or
+    (a == 0 and b == 0 and c == 1) or
+    (a == 1 and b == 0 and c == 0) do
+      true  -> [1] ++ row
+      false -> [0] ++ row
+    end
+    case rest == [] do
+      true  -> Enum.reverse(new_row)
+      false -> make_next_row([b, c | rest], new_row)
+    end
+  end
+end
