@@ -2239,3 +2239,60 @@ defmodule Santa.Day23 do
     end
   end
 end
+
+defmodule Santa.Day24 do
+  @doc """
+  iex> Santa.Day24.part_one()
+  1695
+  """
+  def part_one() do
+    make_bridges()
+    |> Enum.map(&Enum.sum/1)
+    |> Enum.sort()
+    |> Enum.reverse()
+    |> hd()
+  end
+
+  @doc """
+  iex> Santa.Day24.part_two()
+  1673
+  """
+  def part_two() do
+    make_bridges()
+    |> Enum.map(fn (list) -> {length(list), Enum.sum(list), list} end)
+    |> Enum.sort()
+    |> Enum.reverse()
+    |> hd()
+    |> elem(1)
+  end
+
+  defp make_bridges() do
+    Santa.Day24.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce(%{}, fn (line, map) ->
+      [n1, n2] = String.split(line, "/")
+      n1 = String.to_integer(n1)
+      n2 = String.to_integer(n2)
+      n1_values = Map.get(map, n1, [])
+      n2_values = Map.get(map, n2, [])
+      Map.put(map, n1, [n2] ++ n1_values)
+      |> Map.put(n2, [n1] ++ n2_values) end)
+      |> find_max([0], [])
+  end
+
+  defp find_max(available_parts, [match | used], done) do
+    matching = Map.get(available_parts, match, [])
+    case matching == [] do
+      true  -> [[match | used] | done]
+      false ->
+        Enum.reduce(matching, done, fn(part, done) ->
+          find_max(remove_part({part, match}, available_parts),
+            [part, match, match | used], done) end)
+    end
+  end
+
+  defp remove_part({n1 ,n2}, map) do
+    new_map = Map.put(map, n1, Map.get(map, n1) -- [n2])
+    Map.put(new_map, n2, Map.get(new_map, n2) -- [n1])
+  end
+end
