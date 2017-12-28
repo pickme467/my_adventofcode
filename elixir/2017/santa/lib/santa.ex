@@ -2296,3 +2296,66 @@ defmodule Santa.Day24 do
     Map.put(new_map, n2, Map.get(new_map, n2) -- [n1])
   end
 end
+
+defmodule Santa.Day25 do
+  @doc """
+  iex> Santa.Day25.part_one
+  3578
+  """
+  def part_one() do
+    execute(12861455, state_machine(), :a)
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day25.test()
+  3
+  """
+  def test() do
+    machine = %{
+      :a => [{0, {1, :right, :b}}, {1, {0, :left,  :b}}],
+      :b => [{0, {1, :left,  :a}}, {1, {1, :right, :a}}],
+    }
+    execute(6, machine, :a)
+  end
+
+  defp execute(count, state_machine, start_state) do
+    1..count
+    |> Enum.reduce({start_state, {0, %{}}}, fn(_, {state, tape}) ->
+      step(state_machine, state, tape) end)
+      |> elem(1)
+      |> elem(1)
+      |> Map.values()
+    |> Enum.sum()
+  end
+
+  defp state_machine() do
+    # for manual verification execute Santa.Day25.Input.input()
+    %{
+      :a => [{0, {1, :right, :b}}, {1, {0, :left,  :b}}],
+      :b => [{0, {1, :left,  :c}}, {1, {0, :right, :e}}],
+      :c => [{0, {1, :right, :e}}, {1, {0, :left,  :d}}],
+      :d => [{0, {1, :left,  :a}}, {1, {1, :left,  :a}}],
+      :e => [{0, {0, :right, :a}}, {1, {0, :right, :f}}],
+      :f => [{0, {1, :right, :e}}, {1, {1, :right, :a}}],
+    }
+  end
+
+  defp step(state_machine, state, tape) do
+    {_, {next_value, direction, next_state}} =
+      List.keyfind(state_machine[state], read(tape), 0)
+    {next_state, move(tape, direction, next_value)}
+  end
+
+  defp read({current, map}) do
+    Map.get(map, current, 0)
+  end
+
+  defp move({current, map}, :right, new_value) do
+    {current + 1, Map.put(map, current, new_value)}
+  end
+
+  defp move({current, map}, :left, new_value) do
+    {current - 1, Map.put(map, current, new_value)}
+  end
+end
