@@ -905,3 +905,137 @@ defmodule Santa.Day18 do
     end
   end
 end
+
+defmodule Santa.Day19 do
+  @moduledoc """
+  So this part is tricky. If you look at some rule that emerges when
+  you do couple of the first iterations the final number is just odd
+  number that is starting from one on each number that is equal to two
+  to integer power and increases by two on each subsequent number
+  until the next two to integer power. So to solve the quest you need
+  to find the highest power that gives number less than given number
+  and then muliply the remaining by two and add one.
+
+  Part two rule is even more tricky. It is based on power of
+  three. Starting from number equal power of tree plus one it
+  increases by one until value equal to that power of three
+  value. Then it starts progressing by two until the next power of
+  three value. At that point these two values are equal. Then starting
+  from the next number value is reset to one and progress by one once
+  again. So we find if given nuber is in lower or higher part of the
+  range between two subsequent power of three values. Then we either
+  do simple substraction or find how many steps counted as two are
+  between given number and place where it starts counting by two and
+  just add this distance multiplied by two. Sounds complicated, I know..
+  """
+  @doc """
+  iex> Santa.Day19.part_one
+  1841611
+  """
+  def part_one() do
+    input = 3017957
+    highest_power_of_two = round(Float.floor(:math.log(input) / :math.log(2)))
+    highest_2_to_highest_power = round(:math.pow(2, highest_power_of_two))
+    1 + 2 * (input - highest_2_to_highest_power)
+  end
+
+  @doc """
+  iex> Santa.Day19.part_two()
+  1423634
+  """
+  def part_two() do
+    part_two(3017957)
+  end
+
+  @doc false
+  @doc """
+  iex> Santa.Day19.part_two(81)
+  81
+
+  iex> Santa.Day19.part_two(80)
+  79
+
+  iex> Santa.Day19.part_two(28)
+  1
+
+  iex> Santa.Day19.part_two(54)
+  27
+
+  iex> Santa.Day19.part_two(55)
+  29
+  """
+  def part_two(input) do
+    highest_power_of_three = round(Float.ceil(:math.log(input) / :math.log(3)))
+    three_to_highest_power = round(:math.pow(3, highest_power_of_three))
+    three_to_highest_less_one = round(:math.pow(3, highest_power_of_three - 1))
+    case input > three_to_highest_power - three_to_highest_less_one
+      do
+      true  -> three_to_highest_less_one +
+               2 * (input -  2 * three_to_highest_less_one)
+      false -> input - three_to_highest_less_one
+    end
+  end
+
+  @doc """
+  This is test function that helped me to find rules for part two
+  Doctest is disabled intentionally
+  noiex> Santa.Day19.part_two_generator()
+  :ok
+  """
+  def part_two_generator() do
+    for a <- 1..82 do IO.puts "n:#{a} => #{inspect(do_stealing(a))}"
+    end
+    :ok
+  end
+
+  defp do_stealing(count) do
+    for x <- 1..count do x end
+    |> steal()
+  end
+
+  defp steal([final]) do
+    final
+  end
+  defp steal([head | tail]) do
+    {one, two} = Enum.split(tail, round(length(tail) / 2 - 1))
+    steal(one ++ tl(two) ++ [head])
+  end
+
+  @doc """
+  Some manual calculation to spot the rule
+  """
+  def rule_part_one do
+    %{
+      2 => 1,
+      3 => 3,
+      4 => 1,
+      5 => 3,
+      6 => 5,
+      7 => 7,
+      8 => 1,
+      9 => 3,
+      10 => 5,
+      11 => 7,
+      12 => 9,
+      13 => 11,
+      14 => 13,
+      15 => 15,
+      16 => 1,
+      17 => 3,
+      18 => 5,
+      19 => 7,
+      20 => 9,
+      21 => 11,
+      22 => 13,
+      23 => 15,
+      24 => 17,
+      25 => 19,
+      26 => 21,
+      27 => 23,
+      28 => 25,
+      29 => 27,
+      30 => 29,
+      31 => 31,
+      32 => 1}
+  end
+end

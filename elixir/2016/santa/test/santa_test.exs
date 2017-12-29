@@ -6,6 +6,7 @@ defmodule SantaTest do
   doctest Santa.Day16
   doctest Santa.Day17
   doctest Santa.Day18
+  doctest Santa.Day19
 
   test "one one is not a wall" do
     assert Santa.Day13.Step.is_wall(Santa.Day13.Step.get_my_number, {1, 1})
