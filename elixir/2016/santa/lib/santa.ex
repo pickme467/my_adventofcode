@@ -1001,6 +1001,7 @@ defmodule Santa.Day19 do
     steal(one ++ tl(two) ++ [head])
   end
 
+  @doc false
   @doc """
   Some manual calculation to spot the rule
   """
@@ -1037,5 +1038,67 @@ defmodule Santa.Day19 do
       30 => 29,
       31 => 31,
       32 => 1}
+  end
+end
+
+defmodule Santa.Day20 do
+  @doc """
+  iex> Santa.Day20.part_one()
+  4793564
+  """
+  def part_one() do
+    get_blacklist()
+    |> hd()
+    |> elem(1)
+    |> Kernel.+(1)
+  end
+
+  @doc """
+  iex> Santa.Day20.part_two()
+  146
+  """
+  def part_two() do
+    get_blacklist()
+    |> count_whitelist(0, 0xffffffff)
+  end
+
+  defp get_blacklist() do
+    Santa.Day20.Input.input()
+    |> String.split("\n")
+    |> Enum.map(fn (line) -> [s1, s2] = String.split(line, "-")
+      {String.to_integer(s1), String.to_integer(s2)}
+    end)
+    |> Enum.sort()
+    |> merge(0, [])
+  end
+
+  defp count_whitelist([{_s, e}], count, max) do
+    max - e + count
+  end
+  defp count_whitelist([{_s1, e1}, {s2, e2} | rest], count, max) do
+    count_whitelist([{s2, e2} | rest], count + s2 - e1 - 1, max)
+  end
+
+  defp merge([{s1, e1}, {s2, e2}], merged, output) do
+    case overlap?(e1, s2) do
+      true  -> merge(Enum.sort([{s1, Enum.max([e1, e2])}] ++ output), 0, [])
+      false ->
+        new_list = Enum.sort([{s1, e1}, {s2, e2} | output])
+        case merged > 0 do
+          true  -> merge(new_list, 0, [])
+          false -> new_list
+        end
+    end
+  end
+
+  defp merge([{s1, e1}, {s2, e2} | rest], merged, output) do
+    case overlap?(e1, s2) do
+      true  -> merge([{s1, Enum.max([e1, e2])} | rest], merged + 1, output)
+      false -> merge([{s2, e2} | rest], merged, [{s1, e1}] ++ output)
+    end
+  end
+
+  defp overlap?(ending, starting) do
+    ending - starting + 1 >= 0
   end
 end
