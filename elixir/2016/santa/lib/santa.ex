@@ -1307,3 +1307,42 @@ defmodule Santa.Day21 do
     end
   end
 end
+
+defmodule Santa.Day22 do
+  @doc """
+  iex> Santa.Day22.part_one()
+  937
+  """
+  def part_one() do
+    nodes = Santa.Day22.Input.input()
+    |> String.split("\n")
+    |> Enum.map(fn(line) -> [name, size, used, avail, use_percent] =
+        String.split(line, ~r([ ]+))
+      {name, String.trim_trailing(size, "T") |> String.to_integer(),
+       String.trim_trailing(used, "T") |> String.to_integer(),
+       String.trim_trailing(avail, "T") |> String.to_integer(),
+       String.trim_trailing(use_percent, "%") |> String.to_integer()} end)
+
+    for a <- nodes, b <- nodes -- [a],
+      elem(a, 2) > 0,
+      elem(b, 3) >= elem(a, 2) do
+      {a, b}
+    end
+    |> length()
+  end
+
+  @doc """
+  Funny. This one done manually. Couldn't resist...
+  iex> Santa.Day22.part_two()
+  188
+  """
+  def part_two() do
+    7 +        # from (11,21) to (11,15) - obstacles
+    4 +        # to (7,15) - going around obstacles
+    1 +        # to (7,14) - line of obstacles
+    14 +       # to (7,0)
+    21 +       # to (28,0) - can start moving free and G now
+    (28 * 5) + # to free spot at (0,0) and G at (1,0) - each move takes 5 steps
+    1          # final swap
+  end
+end
