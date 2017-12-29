@@ -1102,3 +1102,208 @@ defmodule Santa.Day20 do
     ending - starting + 1 >= 0
   end
 end
+
+defmodule Santa.Day21 do
+  @doc """
+  iex> Santa.Day21.part_one()
+  "bfheacgd"
+  """
+  def part_one() do
+    password = "abcdefgh"
+    |> String.graphemes()
+    |> Enum.reduce({0, []}, fn (letter, {index, output}) ->
+      {index + 1, [{index, letter}] ++ output} end)
+    |> elem(1)
+    |> Enum.sort()
+    Santa.Day21.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce(password,
+    fn(command, password) ->
+      execute(command, password) end)
+    |> Enum.map(fn ({_, letter}) -> letter end)
+    |> List.to_string()
+  end
+
+  @doc """
+  iex> Santa.Day21.part_two()
+  "gcehdbfa"
+  """
+  def part_two() do
+    password = "fbgdceah"
+    |> String.graphemes()
+    |> Enum.reduce({0, []}, fn (letter, {index, output}) ->
+      {index + 1, [{index, letter}] ++ output} end)
+    |> elem(1)
+    |> Enum.sort()
+    Santa.Day21.Input.input()
+    |> String.split("\n")
+    |> Enum.reverse()
+    |> Enum.reduce(password,
+    fn(command, password) ->
+      execute_reversed(command, password) end)
+    |> Enum.map(fn ({_, letter}) -> letter end)
+    |> List.to_string()
+  end
+
+  @doc """
+  iex> Santa.Day21.execute("swap position 0 with position 1", [{0, :a}, {1, :b}])
+  [{0, :b}, {1, :a}]
+
+  iex> Santa.Day21.execute("swap letter a with letter b", [{0, "a"}, {1, "b"}])
+  [{0, "b"}, {1, "a"}]
+
+  iex> Santa.Day21.execute("rotate left 1 step", [{0, "a"}, {1, "b"}])
+  [{0, "b"}, {1, "a"}]
+
+  iex> Santa.Day21.execute("rotate right 1 step", [{0, "a"}, {1, "b"}])
+  [{0, "b"}, {1, "a"}]
+
+  iex> Santa.Day21.execute("rotate right 2 steps", [{0, "a"}, {1, "b"}])
+  [{0, "a"}, {1, "b"}]
+
+  iex> Santa.Day21.execute("reverse positions 0 through 1", [{0, "a"}, {1, "b"}])
+  [{0, "b"}, {1, "a"}]
+
+  iex> Santa.Day21.execute("reverse positions 1 through 2", [{0, "a"}, {1, "b"}, {2, "c"}])
+  [{0, "a"}, {1, "c"}, {2, "b"}]
+
+  iex> Santa.Day21.execute("reverse positions 1 through 2", [{0, "a"}, {1, "b"}, {2, "c"}, {3, "d"}])
+  [{0, "a"}, {1, "c"}, {2, "b"}, {3, "d"}]
+
+  iex> Santa.Day21.execute("rotate based on position of letter a", [{0, "a"}, {1, "b"}, {2, "c"}, {3, "d"}])
+  [{0, "d"}, {1, "a"}, {2, "b"}, {3, "c"}]
+
+  iex> Santa.Day21.execute("rotate based on position of letter d", [{0, "a"}, {1, "b"}, {2, "c"}, {3, "d"}])
+  [{0, "a"}, {1, "b"}, {2, "c"}, {3, "d"}]
+
+  iex> Santa.Day21.execute("move position 1 to position 2", [{0, "a"}, {1, "b"}, {2, "c"}, {3, "d"}])
+  [{0, "a"}, {1, "c"}, {2, "b"}, {3, "d"}]
+  """
+  def execute("swap position " <> rest, password) do
+    [n1, _with, _position, n2] = String.split(rest, " ")
+    n1 = String.to_integer(n1)
+    n2 = String.to_integer(n2)
+    {^n1, l1} = List.keyfind(password, n1, 0)
+    {^n2, l2} = List.keyfind(password, n2, 0)
+    password
+    |> List.keyreplace(n1, 0, {n1, l2})
+    |> List.keyreplace(n2, 0, {n2, l1})
+  end
+
+  def execute("swap letter " <> rest, password) do
+    [l1, _with, _letter, l2] = String.split(rest, " ")
+    {n1, ^l1} = List.keyfind(password, l1, 1)
+    {n2, ^l2} = List.keyfind(password, l2, 1)
+    password
+    |> List.keyreplace(n1, 0, {n1, l2})
+    |> List.keyreplace(n2, 0, {n2, l1})
+  end
+
+  def execute("rotate left " <> rest, password) do
+    [n, _steps] = String.split(rest, " ")
+    length = length(password)
+    count = String.to_integer(n)
+    case count == length do
+      true  -> password
+      false ->
+        Enum.map(password, fn({index, letter}) ->
+          {Integer.mod(index + length - count, length), letter} end)
+          |> Enum.sort()
+    end
+  end
+
+  def execute("rotate right " <> rest, password) do
+    [n, _steps] = String.split(rest, " ")
+    length = length(password)
+    count = String.to_integer(n)
+    case count == length do
+      true  -> password
+      false ->
+        Enum.map(password, fn({index, letter}) ->
+          {Integer.mod(index + count, length), letter} end)
+          |> Enum.sort()
+    end
+  end
+
+  def execute("rotate based on position of letter " <> letter, password) do
+    {index, ^letter} = List.keyfind(password, letter, 1)
+    count = case index >= 4 do
+              true  -> 2 + index
+              false -> 1 + index
+            end
+    execute("rotate right " <> Integer.to_string(count) <> " steps", password)
+  end
+
+  def execute("reverse positions " <> rest, password) do
+    [n1, _through, n2] = String.split(rest, " ")
+    start = String.to_integer(n1)
+    finish = String.to_integer(n2)
+    lists = Enum.chunk_by(password, fn ({index, _}) ->
+      index >= start and index <= finish end)
+    case start == 0 do
+      true -> length = length(hd(lists))
+      Enum.map(hd(lists), fn ({index, letter}) ->
+        {length - index - 1, letter} end) ++ List.flatten(tl(lists))
+      false -> [head, to_reverse | rest] = lists
+        length = length(to_reverse)
+        head ++ Enum.map(to_reverse, fn ({index, letter}) ->
+          {2 * start + length - index - 1, letter} end) ++ List.flatten(rest)
+    end
+    |> Enum.sort()
+  end
+
+  def execute("move position " <> rest, password) do
+    [n1, _to, _position, n2] = String.split(rest, " ")
+    n1 = String.to_integer(n1)
+    n2 = String.to_integer(n2)
+    Enum.map(password, fn
+      ({^n1, letter}) -> {n2, letter}
+      ({index, letter}) ->
+        case index < Enum.min([n1, n2]) or index > Enum.max([n1, n2]) do
+        true  -> {index, letter}
+        false ->
+          case n1 < n2 do
+            true  -> {index - 1, letter}
+            false -> {index + 1, letter}
+          end
+      end
+        end)
+    |> Enum.sort()
+  end
+
+  def execute_reversed("swap" <> rest, password) do
+    execute("swap" <> rest, password)
+  end
+
+  def execute_reversed("rotate left " <> rest, password) do
+    execute("rotate right " <> rest, password)
+  end
+
+  def execute_reversed("rotate right " <> rest, password) do
+    execute("rotate left " <> rest, password)
+  end
+
+  def execute_reversed("reverse positions " <> rest, password) do
+    execute("reverse positions " <> rest, password)
+  end
+
+  def execute_reversed("move position " <> rest, password) do
+    [n1, _to, _position, n2] = String.split(rest, " ")
+    execute("move position " <> n2 <> " to position " <> n1, password)
+  end
+
+  def execute_reversed("rotate based on position of letter " <> letter,
+    password) do
+    {index, ^letter} = List.keyfind(password, letter, 1)
+    case index do
+      0 -> execute("rotate left 1 step", password)
+      1 -> execute("rotate left 1 step", password)
+      2 -> execute("rotate right 2 steps", password)
+      3 -> execute("rotate left 2 steps", password)
+      4 -> execute("rotate right 1 steps", password)
+      5 -> execute("rotate left 3 steps", password)
+      6 -> password
+      7 -> execute("rotate left 4 steps", password)
+    end
+  end
+end
