@@ -1346,3 +1346,178 @@ defmodule Santa.Day22 do
     1          # final swap
   end
 end
+
+defmodule Santa.Day23 do
+  @moduledoc """
+
+  Here first part is just code execution task. Easy. But for the
+  second part code just runs forever. One needs to do code analysis,
+  which is tricky because code modifies itself. To make analysis
+  easier I have just ran the first part looking at difference in code
+  between its starting shape and ending one. It looks like program can
+  be split into two parts - first executes until it changes second
+  part enough to be able to run it efficiently. The second part itself
+  is constant - it adds constant value to the register a. So only the
+  first part teeded analysis to find what is the final value of a
+  register when program exits this part. It looks like the first part
+  did just factorial for given number. And that's my second part
+  algorithm:
+
+  1. compute factorial for given a register starting value
+  2. add constant (80 * 87)
+
+  Here is modified versus original program:
+  State of registers at the end of execution for a register equal 7
+   {%{"a" => 12000, "b" => 1, "c" => 0, "d" => 0},
+
+  Modified:             Original:
+  {0, "cpy a b"},       {0, "cpy a b"},
+  {1, "dec b"},	        {1, "dec b"},
+  {2, "cpy a d"},	{2, "cpy a d"},
+  {3, "cpy 0 a"},	{3, "cpy 0 a"},
+  {4, "cpy b c"},	{4, "cpy b c"},
+  {5, "inc a"},	        {5, "inc a"},
+  {6, "dec c"},	        {6, "dec c"},
+  {7, "jnz c -2"},      {7, "jnz c -2"},
+  {8, "dec d"},	        {8, "dec d"},
+  {9, "jnz d -5"},      {9, "jnz d -5"},
+  {10, "dec b"},	{10, "dec b"},
+  {11, "cpy b c"},      {11, "cpy b c"},
+  {12, "cpy c d"},      {12, "cpy c d"},
+  {13, "dec d"},	{13, "dec d"},
+  {14, "inc c"},	{14, "inc c"},
+  {15, "jnz d -2"},     {15, "jnz d -2"},
+  {16, "tgl c"},	{16, "tgl c"},
+  {17, "cpy -16 c"},    {17, "cpy -16 c"}
+  {18, "cpy 1 c"},      {18, "jnz 1 c"},   <- changed
+  {19, "cpy 87 c"},     {19, "cpy 87 c"},
+  {20, "cpy 80 d"},     {20, "jnz 80 d"},  <- changed
+  {21, "inc a"},	{21, "inc a"},
+  {22, "dec d"},	{22, "inc d"},     <- changed
+  {23, "jnz d -2"},     {23, "jnz d -2"},
+  {24, "dec c"},	{24, "inc c"},     <- changed
+  {25, "jnz c -5"}]}    {25, "jnz c -5"}]
+  """
+
+  @doc """
+  iex> Santa.Day23.part_one()
+  12000
+  """
+  def part_one() do
+    execute_with_a_register(7)
+  end
+
+  @doc """
+  iex> Santa.Day23.part_two()
+  479008560
+  """
+  def part_two() do
+    1..12
+    |> Enum.reduce(1, fn(n, fact) -> n * fact end)
+    |> Kernel.+(80 * 87)
+  end
+
+  defp execute_with_a_register(value) do
+    registers = %{"a" => value}
+    program = input()
+    |> String.split("\n")
+    |> Enum.reduce({0, []}, fn(command, {index, output}) ->
+      {index + 1, [{index, command}] ++ output} end)
+    |> elem(1)
+    |> Enum.sort()
+    execute(run(program, 0), 0, registers, program)
+  end
+
+  defp execute(:not_found, _, registers, _) do
+    registers["a"]
+  end
+
+  defp execute("cpy " <> rest, line, registers, program) do
+    [a, b] = String.split(rest, " ")
+    execute(run(program, line + 1), line + 1,
+      Map.put(registers, b, get_value(registers, a)), program)
+  end
+
+  defp execute("dec " <> register, line, registers, program) do
+    execute(run(program, line + 1), line + 1,
+      Map.put(registers, register, get_value(registers, register) - 1), program)
+  end
+
+  defp execute("inc " <> register, line, registers, program) do
+    execute(run(program, line + 1), line + 1,
+      Map.put(registers, register, get_value(registers, register) + 1), program)
+  end
+
+  defp execute("jnz " <> rest, line, registers, program) do
+    [a, b] = String.split(rest, " ")
+    jump = case get_value(registers, a) == 0 do
+             true  -> 1
+             false -> get_value(registers, b)
+           end
+    execute(run(program, line + jump),
+      line + jump, registers, program)
+  end
+
+  defp execute("tgl " <> register, line, registers, program) do
+    offset = get_value(registers, register) + line
+    new_program =
+      case run(program, offset) do
+        :not_found ->
+          program
+        code_line ->
+          {to_toggle, rest} = code_line |> String.split_at(3)
+          new_command =
+            case to_toggle do
+              "inc" -> "dec"
+              "dec" -> "inc"
+              "tgl" -> "inc"
+              "jnz" -> "cpy"
+              "cpy" -> "jnz"
+            end
+          List.keyreplace(program, offset, 0, {offset, new_command <> rest})
+      end
+    execute(run(program, line + 1), line + 1, registers, new_program)
+  end
+
+  defp get_value(registers, register_or_number) do
+    first = String.graphemes(register_or_number) |> hd()
+    case first in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-"] do
+      true  -> String.to_integer(register_or_number)
+      false -> Map.get(registers, register_or_number, 0)
+    end
+  end
+
+  defp run(program, line) do
+    List.keyfind(program, line, 0, {:not_found, :not_found})
+    |> elem(1)
+  end
+
+  defp input() do
+"cpy a b
+dec b
+cpy a d
+cpy 0 a
+cpy b c
+inc a
+dec c
+jnz c -2
+dec d
+jnz d -5
+dec b
+cpy b c
+cpy c d
+dec d
+inc c
+jnz d -2
+tgl c
+cpy -16 c
+jnz 1 c
+cpy 87 c
+jnz 80 d
+inc a
+inc d
+jnz d -2
+inc c
+jnz c -5"
+  end
+end
