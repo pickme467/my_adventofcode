@@ -1372,30 +1372,30 @@ defmodule Santa.Day23 do
 
   Modified:             Original:
   {0, "cpy a b"},       {0, "cpy a b"},
-  {1, "dec b"},	        {1, "dec b"},
-  {2, "cpy a d"},	{2, "cpy a d"},
-  {3, "cpy 0 a"},	{3, "cpy 0 a"},
-  {4, "cpy b c"},	{4, "cpy b c"},
-  {5, "inc a"},	        {5, "inc a"},
-  {6, "dec c"},	        {6, "dec c"},
+  {1, "dec b"},         {1, "dec b"},
+  {2, "cpy a d"},       {2, "cpy a d"},
+  {3, "cpy 0 a"},       {3, "cpy 0 a"},
+  {4, "cpy b c"},       {4, "cpy b c"},
+  {5, "inc a"},         {5, "inc a"},
+  {6, "dec c"},         {6, "dec c"},
   {7, "jnz c -2"},      {7, "jnz c -2"},
-  {8, "dec d"},	        {8, "dec d"},
+  {8, "dec d"},         {8, "dec d"},
   {9, "jnz d -5"},      {9, "jnz d -5"},
-  {10, "dec b"},	{10, "dec b"},
+  {10, "dec b"},        {10, "dec b"},
   {11, "cpy b c"},      {11, "cpy b c"},
   {12, "cpy c d"},      {12, "cpy c d"},
-  {13, "dec d"},	{13, "dec d"},
-  {14, "inc c"},	{14, "inc c"},
+  {13, "dec d"},        {13, "dec d"},
+  {14, "inc c"},        {14, "inc c"},
   {15, "jnz d -2"},     {15, "jnz d -2"},
-  {16, "tgl c"},	{16, "tgl c"},
+  {16, "tgl c"},        {16, "tgl c"},
   {17, "cpy -16 c"},    {17, "cpy -16 c"}
   {18, "cpy 1 c"},      {18, "jnz 1 c"},   <- changed
   {19, "cpy 87 c"},     {19, "cpy 87 c"},
   {20, "cpy 80 d"},     {20, "jnz 80 d"},  <- changed
-  {21, "inc a"},	{21, "inc a"},
-  {22, "dec d"},	{22, "inc d"},     <- changed
+  {21, "inc a"},        {21, "inc a"},
+  {22, "dec d"},        {22, "inc d"},     <- changed
   {23, "jnz d -2"},     {23, "jnz d -2"},
-  {24, "dec c"},	{24, "inc c"},     <- changed
+  {24, "dec c"},        {24, "inc c"},     <- changed
   {25, "jnz c -5"}]}    {25, "jnz c -5"}]
   """
 
@@ -1519,5 +1519,132 @@ inc d
 jnz d -2
 inc c
 jnz c -5"
+  end
+end
+
+defmodule Santa.Day24 do
+  @doc """
+  iex> Santa.Day24.part_one()
+  428
+  """
+  def part_one() do
+    make_map_of_routes()
+    |> find_shortest()
+  end
+
+  @doc """
+  iex> Santa.Day24.part_two()
+  680
+  """
+  def part_two() do
+    make_map_of_routes()
+    |> find_shortest_around()
+  end
+
+  defp make_map_of_routes() do
+    maze = make_maze()
+    coordinates = find_numbers(maze)
+    for x <- Map.keys(coordinates),
+      y <- Map.keys(coordinates) -- [x], x > y do
+        {x, y}
+    end
+    |> Enum.map(fn ({start, stop}) ->
+      Task.async(fn() ->
+        found = flood([coordinates[start]], 1, MapSet.new(),
+          maze, coordinates[stop])
+        {start, stop, found} end)
+    end)
+    |> Task.yield_many()
+    |> Enum.map(fn {_task, {:ok, {s, e, l}}} -> {{s, e}, l} end)
+  end
+
+  defp find_shortest(lengths) do
+    input = ["1", "2", "3", "4", "5", "6", "7"]
+    permutation(input)
+    |> calculate_path_lengths(lengths)
+  end
+
+  defp find_shortest_around(lengths) do
+    input = ["1", "2", "3", "4", "5", "6", "7"]
+    permutation(input)
+    |> Enum.map(fn(list) -> list ++ ["0"] end)
+    |>calculate_path_lengths(lengths)
+  end
+
+  defp calculate_path_lengths(permutations, lengths) do
+    permutations
+    |> Enum.map(fn(permutation) ->
+      Enum.reduce(permutation, {"0", 0},
+        fn (letter, {previous, total}) ->
+          {letter, total + elem(List.keyfind(lengths,
+                 {Enum.max([letter, previous]), Enum.min([letter, previous])},
+                 0), 1)}
+        end)
+        |> elem(1)
+        |> Kernel.-(length(permutation))
+    end)
+    |> Enum.sort()
+    |> hd()
+  end
+
+  defp make_maze() do
+    Santa.Day24.Input.input()
+    |> String.split("\n")
+    |> Enum.reduce({0, %{}}, fn(line, {y, map}) ->
+      {_x, new_map} = String.graphemes(line)
+      |> Enum.reduce({0, map}, fn ("#", {x, map}) -> {x + 1, map}
+        (value, {x, map}) -> {x + 1, Map.put(map, {x, y}, value)} end)
+      {y + 1, new_map} end)
+    |> elem(1)
+  end
+
+  defp find_numbers(map) do
+    Map.keys(map)
+    |> Enum.reduce(%{}, fn (key, numbers_map) ->
+      value = Map.get(map, key)
+      case value != "." do
+        true -> Map.put(numbers_map, value, key)
+        false -> numbers_map
+      end
+    end)
+  end
+
+  defp flood(visited_last, length, visited, map, finish) do
+    visited = MapSet.union(visited, MapSet.new(visited_last))
+    next_round = visited_last
+    |> Enum.reduce({:not_found, []}, fn (last, {:not_found, new_visited}) ->
+      next = find_next(last, map,
+        MapSet.union(visited, MapSet.new(new_visited)))
+      case next == [] do
+        true  -> {:not_found, new_visited}
+        false ->
+          next
+          |> Enum.reduce({:not_found, new_visited},
+          fn (position, {:not_found, just_visited}) ->
+            case position == finish do
+              true  -> {:found, length + 1}
+              false -> {:not_found, [position] ++ just_visited}
+            end
+            (_, found) -> found end)
+      end
+    (_, found) -> found end)
+    case elem(next_round, 0) != :not_found do
+      true  -> elem(next_round, 1)
+      false -> flood(elem(next_round, 1), length + 1, visited, map, finish)
+    end
+  end
+
+  defp find_next({x, y}, map, visited) do
+    [{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}]
+    |> Enum.filter(fn (position) -> Map.has_key?(map, position) and
+    not MapSet.member?(visited, position) end)
+  end
+
+  def permutation([]) do
+    [[]]
+  end
+
+  def permutation(list) do
+    for h <- list, t <- permutation(list -- [h]), do: [h | t]
   end
 end
