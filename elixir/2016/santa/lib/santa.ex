@@ -1648,3 +1648,16 @@ defmodule Santa.Day24 do
     for h <- list, t <- permutation(list -- [h]), do: [h | t]
   end
 end
+
+defmodule Santa.Day25 do
+  @doc """
+  Here value of d register which is 170 * 15 plus a register, must
+  be a sequence of 0 and 1 in binary representation, so a is smallest
+  number that gives such representation when added to 170 * 15.
+  iex> Santa.Day25.part_one()
+  180
+  """
+  def part_one() do
+    0b101010101010 - 15 * 170
+  end
+end
