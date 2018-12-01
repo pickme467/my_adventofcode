@@ -106,4 +106,4 @@ Day1.solution_1
 
 or
 
-Day2.solution_2
+Day1.solution_2
