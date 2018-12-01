@@ -1598,6 +1598,7 @@ defmodule Santa.Day24 do
     |> elem(1)
   end
 
+  @spec find_numbers(map()) :: map()
   defp find_numbers(map) do
     Map.keys(map)
     |> Enum.reduce(%{}, fn (key, numbers_map) ->
@@ -1609,6 +1610,11 @@ defmodule Santa.Day24 do
     end)
   end
 
+  @spec flood(visited_last :: [{integer, integer}],
+    length :: integer,
+    visited :: MapSet.t({integer,integer}),
+    maze :: Map.t(key :: {integer, integer}, value :: String.t()),
+    finish :: {integer, integer}) :: integer
   defp flood(visited_last, length, visited, map, finish) do
     visited = MapSet.union(visited, MapSet.new(visited_last))
     next_round = visited_last
@@ -1634,12 +1640,15 @@ defmodule Santa.Day24 do
     end
   end
 
+  @spec find_next({integer, integer}, %{{integer, integer} => integer},
+     MapSet.t({integer, integer})) :: [{integer, integer}]
   defp find_next({x, y}, map, visited) do
     [{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}]
     |> Enum.filter(fn (position) -> Map.has_key?(map, position) and
     not MapSet.member?(visited, position) end)
   end
 
+  @spec permutation([any]) :: [any]
   def permutation([]) do
     [[]]
   end
