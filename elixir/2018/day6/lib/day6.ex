@@ -9,28 +9,27 @@ defmodule Day6 do
   """
   def solution_1 do
     input = Day6.Input.get_input()
-    min_x =
-      input
-      |> Enum.sort_by(fn ({x, _y}) -> x end, &<=/2)
-      |> hd()
-      |> elem(0)
-    max_x =
-      input
-      |> Enum.sort_by(fn ({x, _y}) -> x end, &>=/2)
-      |> hd()
-      |> elem(0)
-    min_y =
-      input
-      |> Enum.sort_by(fn ({_x, y}) -> y end, &<=/2)
-      |> hd()
-      |> elem(1)
-    max_y =
-      input
-      |> Enum.sort_by(fn ({_x, y}) -> y end, &>=/2)
-      |> hd()
-      |> elem(1)
+    {min_x, min_y, max_x, max_y} = find_extremes(input)
 
-    IO.puts "Minmax: #{inspect({{min_x, min_y}, {max_x, max_y}})}"
+    infinity_x_tasks =
+      for x <- min_x..max_x,
+        y <- [min_y, max_y] do
+          {x, y}
+      end
+      |> Enum.map(fn (coordinates) -> Task.async(fn ->
+           find_shortest_path(coordinates, input)
+           end)
+         end)
+
+    infinity_y_tasks =
+      for x <- [min_x, max_x],
+        y <- min_y..max_y do
+          {x, y}
+      end
+      |> Enum.map(fn (coordinates) -> Task.async(fn ->
+           find_shortest_path(coordinates, input)
+           end)
+         end)
 
     tasks =
       for x <- min_x..max_x,
@@ -42,15 +41,40 @@ defmodule Day6 do
            end)
          end)
 
-      Task.yield_many(tasks, :infinity)
-      |> Enum.reduce(%{}, fn
-        ({_task, {:ok, point}}, acc) ->
-          Map.put(acc, point, Map.get(acc, point, 0) + 1)
-      end)
-      |> Enum.sort_by(fn ({_k, v}) -> v end, &>=/2)
-      |> Enum.filter(fn (x) -> is_finite_location(x, input) end)
-      |> hd()
-      |> elem(1)
+    infinite_coordinates =
+      Task.yield_many(infinity_x_tasks ++ infinity_y_tasks, :infinity)
+      |> Enum.map(fn ({_task, {:ok, coordinate}}) -> coordinate end)
+      |> Enum.uniq()
+
+    Task.yield_many(tasks, :infinity)
+    |> Enum.reduce(%{}, fn
+      ({_task, {:ok, point}}, acc) ->
+        Map.put(acc, point, Map.get(acc, point, 0) + 1)
+    end)
+    |> Enum.sort_by(fn ({_k, v}) -> v end, &>=/2)
+    |> Enum.filter(fn ({loc, _count}) -> is_finite_location(loc, infinite_coordinates) end)
+    |> hd()
+    |> elem(1)
+  end
+
+  defp find_extremes(input) do
+    min_x =
+      input
+      |> Enum.map(fn ({x, _y}) -> x end)
+      |> Enum.min()
+    max_x =
+      input
+      |> Enum.map(fn ({x, _y}) -> x end)
+      |> Enum.max()
+    min_y =
+      input
+      |> Enum.map(fn ({_x, y}) -> y end)
+      |> Enum.min()
+    max_y =
+      input
+      |> Enum.map(fn ({_x, y}) -> y end)
+      |> Enum.max()
+    {min_x, min_y, max_x, max_y}
   end
 
   defp find_shortest_path(point, list) do
@@ -69,8 +93,8 @@ defmodule Day6 do
     {abs(x2 - x1) + abs(y2 - y1), {x2, y2}}
   end
 
-  defp is_finite_location(_location, _all_locations) do
-    true
+  defp is_finite_location(location, infinite_coordinates) do
+    not location in infinite_coordinates
   end
 end
 
