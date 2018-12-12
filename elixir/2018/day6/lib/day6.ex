@@ -57,6 +57,30 @@ defmodule Day6 do
     |> elem(1)
   end
 
+  @doc """
+  iex> Day6.solution_2()
+  37318
+  """
+  def solution_2 do
+    input = Day6.Input.get_input()
+    {min_x, min_y, max_x, max_y} = find_extremes(input)
+    tasks =
+      for x <- min_x..max_x,
+          y <- min_y..max_y do
+          {x, y}
+      end
+      |> Enum.map(fn (coordinates) -> Task.async(fn ->
+           find_total_distance(coordinates, input)
+           end)
+         end)
+
+    Task.yield_many(tasks, :infinity)
+    |> Enum.map(fn
+      ({_task, {:ok, distance}}) -> distance end)
+    |> Enum.filter(fn (distance) -> distance < 10000 end)
+    |> Enum.count()
+  end
+
   defp find_extremes(input) do
     min_x =
       input
@@ -95,6 +119,13 @@ defmodule Day6 do
 
   defp is_finite_location(location, infinite_coordinates) do
     not location in infinite_coordinates
+  end
+
+  defp find_total_distance(point, points) do
+    points
+    |> Enum.map(fn
+      (coordinates) -> find_distance(point, coordinates) |> elem(0) end)
+    |> Enum.sum()
   end
 end
 
