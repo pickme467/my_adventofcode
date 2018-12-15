@@ -8,6 +8,20 @@ defmodule Day7 do
   "BFGKNRTWXIHPUMLQVZOYJACDSE"
   """
   def solution_1 do
+    {first, successors, predcessors} = prepare_data()
+    traverse(first, successors, predcessors, [])
+  end
+
+  @doc """
+  iex> Day7.solution_2
+  1163
+  """
+  def solution_2 do
+    {first, successors, predcessors} = prepare_data()
+    traverse_with_workers(first, successors, predcessors, [], 0, [])
+  end
+
+  defp prepare_data do
     {successors, predcessors} =
       Day7.Input.get_input()
       |> Enum.reduce({%{}, %{}}, fn
@@ -33,7 +47,7 @@ defmodule Day7 do
       |> Enum.filter(fn x -> not (x in all_successors) end)
       |> Enum.sort()
 
-    traverse(first, successors, predcessors, [])
+    {first, successors, predcessors}
   end
 
   defp traverse([], _, _, solution) do
@@ -45,6 +59,11 @@ defmodule Day7 do
   defp traverse([x | rest], successors, predcessors, solution) do
     new_solution = [x | solution]
 
+    {can_be_added, new_successors} = calculate_next_step(new_solution, x, successors, predcessors)
+    traverse(Enum.sort(can_be_added ++ rest), new_successors, predcessors, new_solution)
+  end
+
+  defp calculate_next_step(new_solution, x, successors, predcessors) do
     to_be_added = Map.get(successors, x, [])
 
     can_be_added =
@@ -62,7 +81,70 @@ defmodule Day7 do
         new_list -> Map.put(successors, x, Enum.sort(new_list))
       end
 
-    traverse(Enum.sort(can_be_added ++ rest), new_successors, predcessors, new_solution)
+    {can_be_added, new_successors}
+  end
+
+  defp traverse_with_workers([], _, _, _solution, time, []) do
+    time
+  end
+
+  defp traverse_with_workers(input, successors, predcessors, solution, time, workers) do
+    new_workers =
+      input
+      |> Enum.reduce({[], 5 - length(workers)}, fn
+        _x, {workers, 0} -> {workers, 0}
+        x, {workers, n} -> {[make_worker_for(x) | workers], n - 1}
+      end)
+      |> elem(0)
+
+    used_input =
+      new_workers
+      |> Enum.map(fn %{letter: l} -> l end)
+
+    all_workers =
+      (workers ++ new_workers)
+      |> Enum.map(fn worker -> %{worker | steps: worker.steps - 1} end)
+
+    ready_letters =
+      all_workers
+      |> Enum.filter(fn
+        %{steps: 0} -> true
+        _ -> false
+      end)
+      |> Enum.map(fn %{letter: l} -> l end)
+
+    active_workers =
+      all_workers
+      |> Enum.filter(fn
+        %{steps: 0} -> false
+        _ -> true
+      end)
+
+    new_solution = ready_letters ++ solution
+
+    {new_ready_letters, new_successors} =
+      ready_letters
+      |> Enum.reduce({[], successors}, fn x, {ready, successors} ->
+        {can_be_added, new_successors} =
+          calculate_next_step(new_solution, x, successors, predcessors)
+
+        {can_be_added ++ ready, new_successors}
+      end)
+
+    traverse_with_workers(
+      Enum.sort(new_ready_letters ++ (input -- used_input)),
+      new_successors,
+      predcessors,
+      new_solution,
+      time + 1,
+      active_workers
+    )
+  end
+
+  defp make_worker_for(letter) do
+    <<letter_value>> = letter
+    <<a_value>> = "A"
+    %{letter: letter, steps: 60 + letter_value - a_value + 1}
   end
 end
 
