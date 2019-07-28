@@ -11,6 +11,15 @@ defmodule Day8 do
     traverse_tree(Day8.Input.input, [], [])
   end
 
+  @doc """
+  iex> Day8.solution_2
+  23798
+  """
+  def solution_2 do
+    {tree, []} = Day8.MakeTree.make_tree(Day8.Input.input)
+    make_sum(tree)
+  end
+
   defp traverse_tree([0, _length | meta], [], meta_list) do
     Enum.sum(meta ++ meta_list)
   end
@@ -22,6 +31,21 @@ defmodule Day8 do
 
   defp traverse_tree([children, meta | rest], parents, meta_list) do
     traverse_tree(rest, [{children, meta} | parents], meta_list)
+  end
+
+  defp make_sum(node) do
+    case Map.has_key?(node, :child) do
+      false -> Enum.sum(node.meta)
+      true ->
+        node.meta
+        |> Enum.reduce(0, fn index, sum ->
+          case Map.has_key?(node.child, index) do
+            false -> sum
+            true ->
+              sum + make_sum(Map.get(node.child, index))
+          end
+        end)
+    end
   end
 end
 
