@@ -36,16 +36,19 @@ defmodule Day8 do
   defp make_sum(node) do
     case Map.has_key?(node, :child) do
       false -> Enum.sum(node.meta)
-      true ->
-        node.meta
-        |> Enum.reduce(0, fn index, sum ->
-          case Map.has_key?(node.child, index) do
-            false -> sum
-            true ->
-              sum + make_sum(Map.get(node.child, index))
-          end
-        end)
+      true -> make_childrens_sum(node)
     end
+  end
+
+  defp make_childrens_sum(node) do
+    node.meta
+    |> Enum.reduce(0, fn index, sum ->
+      case Map.has_key?(node.child, index) do
+        false -> sum
+        true ->
+          sum + make_sum(Map.get(node.child, index))
+      end
+    end)
   end
 end
 
