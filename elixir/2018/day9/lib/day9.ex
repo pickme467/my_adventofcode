@@ -25,10 +25,22 @@ defmodule Day9 do
 
   @doc """
   iex> Day9.solution_2
-  :not_implemented
+  3469562780
   """
   def solution_2 do
-    :not_implemented
+    {_marbles, scores} =
+      next_marble(
+        1,
+        %{current: 0, circle: %{0 => %{n: 0, p: 0}}},
+        %{},
+        1,
+        Day9.Input.input2()
+      )
+
+     scores
+     |> Map.values()
+     |> Enum.map(fn list -> Enum.sum(list) end)
+     |> Enum.max()
   end
 
   defp next_marble(points, marbles, scores, _player, %{points: max}) when points > max do
@@ -95,5 +107,9 @@ end
 defmodule Day9.Input do
   def input do
     %{players: 428, points: 72061}
+  end
+
+  def input2 do
+    %{players: 428, points: 7206100}
   end
 end
