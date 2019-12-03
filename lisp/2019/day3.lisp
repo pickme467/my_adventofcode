@@ -227,9 +227,17 @@
                 ((equal 'R d) (vector (+ (elt start 0) dist) (elt start 1)))
                 ((equal 'U d) (vector (elt start 0) (- (elt start 1) dist)))
                 ((equal 'D d) (vector (elt start 0) (+ (elt start 1) dist))))))
-  (values (vector start end) end)))
+    (cond
+      ((or (equal 'L d) (equal 'R d))
+       (values (vector 'Y (elt start 1) (sort (vector (elt start 0) (elt end 0)) #'<)) end))
+      (t (values (vector 'X (elt start 0) (sort (vector (elt start 1) (elt end 1)) #'<)) end)))))
 
-(defun find-crossings (l1 l2)
-  (reduce #'(lambda (acc line)
-              (dolist (m l2)
-                )) l1 :initial-value ()))
+(defun find-crosses (l1 l2)
+  (reduce #'(lambda (acc el1)
+              (dolist (el2 l2)
+                (let ((cross (find-cross el1 el2)))
+                  (if (null cross) acc
+                      (push cross acc))))
+              acc) l1 :initial-value ()))
+
+(defun find-cross (e1 e2) nil)
