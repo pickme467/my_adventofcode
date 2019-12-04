@@ -205,6 +205,12 @@
 (defun sample1-first () (list "R75" "D30" "R83" "U83" "L12" "D49" "R71" "U7" "L72"))
 (defun sample1-second () (list "U62" "R66" "U55" "R34" "D71" "R55" "D58" "R83"))
 
+(defun sample2-first () (list "R98" "U47" "R26" "D63" "R33" "U87" "L62" "D20" "R33" "U53" "R51"))
+(defun sample2-second () (list "U98" "R91" "D20" "R16" "D67" "R40" "U7" "R15" "U6" "R7"))
+
+(defun sample3-first () (list "R8" "U5" "L5" "D3"))
+(defun sample3-second () (list "U7" "R6" "D4" "L4"))
+
 (defun direction (element)
   (let ((letter (elt element 0)))
     (cond
@@ -217,13 +223,14 @@
   (parse-integer (subseq element 1)))
 
 (defun make-lines (elements)
-  (let ((start '#(0 0)))
+  (let ((start '#(0 0)) (dist 0))
     (map 'list #'(lambda (element)
-                   (multiple-value-bind (line end) (make-line element start)
+                   (multiple-value-bind (line new-distance end) (make-line element dist start)
                      (setf start end)
+                     (setf dist new-distance)
                      line)) elements)))
 
-(defun make-line(element start)
+(defun make-line(element total-distance start)
   (let* ((d (direction element)) (dist (distance element))
          (end (cond
                 ((equal 'L d) (vector (- (elt start 0) dist) (elt start 1)))
@@ -232,8 +239,14 @@
                 ((equal 'D d) (vector (elt start 0) (+ (elt start 1) dist))))))
     (cond
       ((or (equal 'L d) (equal 'R d))
-       (values (vector 'Y (elt start 1) (sort (vector (elt start 0) (elt end 0)) #'<)) end))
-      (t (values (vector 'X (elt start 0) (sort (vector (elt start 1) (elt end 1)) #'<)) end)))))
+       (values
+        (vector 'Y (elt start 1) (vector (elt start 0) (elt end 0)) total-distance)
+        (+ total-distance dist)
+        end))
+      (t (values
+          (vector 'X (elt start 0) (vector (elt start 1) (elt end 1)) total-distance)
+          (+ total-distance dist)
+          end)))))
 
 (defun find-crosses (l1 l2)
   (reduce #'(lambda (acc el1)
@@ -245,13 +258,12 @@
 
 (defun find-cross (e1 e2)
   (if (and (not (equal (elt e1 0) (elt e2 0))) (cross (elt e1 1) (elt e2 2)) (cross (elt e2 1) (elt e1 2)))
-      (let ((result (+ (abs (elt e1 1)) (abs (elt e2 1)))))
-        ;;(format t "e1: ~a, e2: ~a, res: ~a~%" e1 e2 result)
-        result)
+      (+ (abs (elt e1 1)) (abs (elt e2 1)))
       nil))
 
 (defun cross (a range)
-  (and (>= a (elt range 0)) (<= a (elt range 1))))
+  (let* ((to-sort (copy-seq range)) (sorted (sort to-sort #'<)))
+    (and (>= a (elt sorted 0)) (<= a (elt sorted 1)))))
 
 (defun get-distance (distance-list)
   (let* ((sorted (sort distance-list #'<)) (answer (car sorted)) (rest (cdr sorted)))
@@ -259,4 +271,29 @@
         (car rest)
         answer)))
 
-(assert (= 386 (get-distance (find-crosses (make-lines (first-wire)) (make-lines (second-wire))))))
+(defun find-crosses-and-steps (l1 l2)
+  (reduce #'(lambda (acc el1)
+              (dolist (el2 l2)
+                (let ((cross (find-cross-point el1 el2)))
+                  (if (null cross) acc
+                      (push (+ (cross-distance el1 cross) (cross-distance el2 cross)) acc))))
+              acc) l1 :initial-value ()))
+
+(defun find-cross-point (e1 e2)
+  (if (and (not (equal (elt e1 0) (elt e2 0))) (cross (elt e1 1) (elt e2 2)) (cross (elt e2 1) (elt e1 2)))
+      (if (equal 'X (elt e1 0))
+          (vector (elt e1 1) (elt e2 1))
+          (vector (elt e2 1) (elt e1 1)))
+      nil))
+
+(defun cross-distance (line cross-point)
+  (+ (elt line 3)
+     (if (equal 'X (elt line 0))
+         (abs (- (elt (elt line 2) 0) (elt cross-point 1)))
+         (abs (- (elt (elt line 2) 0) (elt cross-point 0))))))
+
+;; part 1
+(time (assert (= 386 (get-distance (find-crosses (make-lines (first-wire)) (make-lines (second-wire)))))))
+
+;; part 2
+(time (assert (= 6484 (get-distance (find-crosses-and-steps (make-lines (first-wire)) (make-lines (second-wire)))))))
