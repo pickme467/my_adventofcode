@@ -202,6 +202,9 @@
                             "U513" "R129" "D135"
                             "L224"))
 
+(defun sample1-first () (list "R75" "D30" "R83" "U83" "L12" "D49" "R71" "U7" "L72"))
+(defun sample1-second () (list "U62" "R66" "U55" "R34" "D71" "R55" "D58" "R83"))
+
 (defun direction (element)
   (let ((letter (elt element 0)))
     (cond
@@ -240,4 +243,20 @@
                       (push cross acc))))
               acc) l1 :initial-value ()))
 
-(defun find-cross (e1 e2) nil)
+(defun find-cross (e1 e2)
+  (if (and (not (equal (elt e1 0) (elt e2 0))) (cross (elt e1 1) (elt e2 2)) (cross (elt e2 1) (elt e1 2)))
+      (let ((result (+ (abs (elt e1 1)) (abs (elt e2 1)))))
+        ;;(format t "e1: ~a, e2: ~a, res: ~a~%" e1 e2 result)
+        result)
+      nil))
+
+(defun cross (a range)
+  (and (>= a (elt range 0)) (<= a (elt range 1))))
+
+(defun get-distance (distance-list)
+  (let* ((sorted (sort distance-list #'<)) (answer (car sorted)) (rest (cdr sorted)))
+    (if (= 0 answer)
+        (car rest)
+        answer)))
+
+(assert (= 386 (get-distance (find-crosses (make-lines (first-wire)) (make-lines (second-wire))))))
