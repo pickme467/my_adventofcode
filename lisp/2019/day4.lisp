@@ -61,7 +61,7 @@
     (and (six-digit num-str) (increasing num-str) (exact-two-the-same num-str))))
 
 ;; part 1
-(assert (= 1764 (count-matches #'matches)))
+(time (assert (= 1764 (count-matches #'matches))))
 
 ;; part 2
-(assert (= 1196 (count-matches #'matches-exact-two)))
+(time (assert (= 1196 (count-matches #'matches-exact-two))))

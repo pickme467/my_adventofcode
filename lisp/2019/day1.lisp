@@ -108,7 +108,7 @@
         (reduce-fuel next (+ total next)))))
 
 ;; part 1
-(assert (= 3471229 (reduce #'+ (map 'list #'fuel (input)))))
+(time (assert (= 3471229 (reduce #'+ (map 'list #'fuel (input))))))
 
 ;; part 2
-(assert (= 5203967 (reduce #'+ (map 'list #'reduce-fuel (input)))))
+(time (assert (= 5203967 (reduce #'+ (map 'list #'reduce-fuel (input))))))

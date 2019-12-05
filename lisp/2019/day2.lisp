@@ -48,7 +48,7 @@
        ((= 19690720 result) (+ (* 100 x ) y))))
 
 ;; day 2 part 1
-(assert (= 3850704 (calculate 0 (input-mod 12 2))))
+(time (assert (= 3850704 (calculate 0 (input-mod 12 2)))))
 
 ;; day 2 part 2
-(assert (= 6718 (calculate-with-reset)))
+(time (assert (= 6718 (calculate-with-reset))))
