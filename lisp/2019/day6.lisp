@@ -1491,6 +1491,37 @@
                  "8X6)481"
                  "7SX)BYW"))
 
+(defun sample ()
+  (list "COM)B"
+        "B)C"
+        "C)D"
+        "D)E"
+        "E)F"
+        "B)G"
+        "G)H"
+        "D)I"
+        "E)J"
+        "J)K"
+        "K)L"))
+
+(defun sample2 ()
+  (list "COM)B"
+        "B)C"
+        "C)D"
+        "D)E"
+        "E)F"
+        "B)G"
+        "G)H"
+        "D)I"
+        "E)J"
+        "J)K"
+        "K)L"
+        "K)YOU"
+        "I)SAN"))
+
+(defun sethash (key value hash)
+  (setf (gethash key hash) value))
+
 (defun split (seq)
   (values (subseq seq (1+ (position #\) seq))) (subseq seq 0 (position #\) seq))))
 
@@ -1498,20 +1529,66 @@
   (let ((hash (make-hash-table :test #'equal)))
     (dolist (element list)
       (multiple-value-bind (key value) (split element)
-        (setf (gethash key hash) value)))
+        (sethash key value hash)))
     hash))
 
 (defun calculate (hash)
-  (let ((output-hash (make-hash-table :test #'equal)))
+  (let ((output-hash (make-hash-table :test #'equal))
+        (sum 0))
     (maphash #'(lambda (key value)
-                 (setf (gethash key output-hash) (count-orbits key value)))
+                 (count-orbits key value hash output-hash 0))
              hash)
-    output-hash))
+    (maphash #'(lambda (key value)
+                 (declare (ignore key))
+                 (setf sum (+ sum value))) output-hash)
+    (values sum)))
 
-(defun count-orbits (key value)
-  (vector key value))
+(defun count-orbits (key orbit path-hash output-hash step)
+  (let ((value (gethash orbit output-hash))
+        (next (gethash orbit path-hash)))
+    (if (null orbit)
+        (progn
+          (setf step 0)
+          (sethash key step output-hash))
+        (progn
+          (if (null value)
+              (setf step (+ 1 step (count-orbits orbit next path-hash output-hash 0)))
+              (setf step (+ 1 step value)))
+          (sethash key step output-hash))))
+  step)
 
-(defun list-hash (hash)
-  (maphash #'(lambda (key value)
-               (format t "~a ~a~%" key value)) hash)
-  hash)
+(defun count-distance (key1 key2 path-hash)
+  (let ((common (find-common key1 key2 path-hash))
+        (output-hash (make-hash-table :test #'equal))
+        (key1-orbit (gethash key1 path-hash))
+        (key2-orbit (gethash key2 path-hash)))
+    (sethash common 0 output-hash)
+    (count-orbits key1 key1-orbit path-hash output-hash 0)
+    (count-orbits key2 key2-orbit path-hash output-hash 0)
+    (+ (gethash key1 output-hash) (gethash key2 output-hash) -2)))
+
+(defun find-common (k1 k2 hash)
+  (let ((l1 (make-path k1 hash ()))
+        (l2 (make-path k2 hash ())))
+    (find-first-diff l1 l2 hash)))
+
+(defun find-first-diff (list1 list2 hash)
+  (let ((head1 (car list1))
+        (head2 (car list2))
+        (tail1 (cdr list1))
+        (tail2 (cdr list2)))
+    (if (equal head1 head2)
+      (find-first-diff tail1 tail2 hash)
+      (gethash head1 hash))))
+
+(defun make-path (key hash list)
+  (let ((next (gethash key hash)))
+    (if (null next)
+        list
+        (make-path next hash (push next list)))))
+
+;; day 6 part 1
+(time (assert (= 270768 (calculate (convert (input))))))
+
+;; day 6 part 2
+(time (assert (= 451 (count-distance "YOU" "SAN" (convert (input))))))
