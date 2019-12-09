@@ -104,12 +104,14 @@
            (t pos-or-value))))
     (if (null value) 0 value)))
 
+(defun get-at-index (index start program)
+  (gethash (+ start index) program))
+
 (defun get-nth (index mode relative start program)
-  (let ((x (gethash (+ start index) program)))
-    (get-value x mode relative program)))
+  (get-value (get-at-index index start program) mode relative program))
 
 (defun get-nth-write (index mode relative start program)
-  (let ((pos (gethash (+ start index) program)))
+  (let ((pos (get-at-index index start program)))
     (cond
       ((= 0 mode) pos)
       ((= 2 mode) (+ pos relative))
@@ -120,7 +122,7 @@
         (y (get-nth 2 p2 relative start program))
         (pos (get-nth-write 3 p3 relative start program)))
     (let ((value (funcall fn x y)))
-      (setf (gethash pos program) value))))
+      (sethash pos value program))))
 
 (defun do-add (p1 p2 p3 relative start program)
   (do-three-argument #'+ p1 p2 p3 relative start program))
@@ -130,7 +132,7 @@
 
 (defun do-input (input mode relative start program)
   (let ((x (get-nth-write 1 mode relative start program)))
-    (setf (gethash x program) input)))
+    (sethash x input program)))
 
 (defun do-output (p1 relative start program)
   (let ((value (get-nth 1 p1 relative start program)))
@@ -153,16 +155,16 @@
         (y (get-nth 2 p2 relative start program))
         (pos (get-nth-write 3 p3 relative start program)))
     (if (< x y)
-        (setf (gethash pos program) 1)
-        (setf (gethash pos program) 0))))
+        (sethash pos 1 program)
+        (sethash pos 0 program))))
 
 (defun do-equals (p1 p2 p3 relative start program)
   (let ((x (get-nth 1 p1 relative start program))
         (y (get-nth 2 p2 relative start program))
         (pos (get-nth-write 3 p3 relative start program)))
     (if (= x y)
-        (setf (gethash pos program) 1)
-        (setf (gethash pos program) 0))))
+        (sethash pos 1 program)
+        (sethash pos 0 program))))
 
 (defun do-relative (p1 relative start program)
   (let ((value (get-nth 1 p1 relative start program)))
