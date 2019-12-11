@@ -200,8 +200,7 @@
          (calculate (+ 4 start) program input output relative))
         ((= opcode 9)
          (calculate (+ 2 start) program input output (do-relative p1 relative start program)))
-        (t output)))
-    ))
+        (t output)))))
 
 (defun decode-command (command)
   (let* ((opcode (rem command 100))
