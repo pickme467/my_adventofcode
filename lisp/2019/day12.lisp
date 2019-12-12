@@ -3,6 +3,21 @@
                   ((-15 -3 13) (0 0 0))
                   ((3 7 -4) (0 0 0))))
 
+(defun input2 () '(((-10 0 0) (0 0 0))
+                  ((1 0 0) ( 0 0))
+                  ((-15 0 0) (0 0 0))
+                  ((3 0 0) (0 0 0))))
+
+(defun input3 () '(((0 -13 0) (0 0 0))
+                  ((0 2 0) ( 0 0))
+                  ((0 -3 0) (0 0 0))
+                  ((0 7 0) (0 0 0))))
+
+(defun input4 () '(((0 0 7) (0 0 0))
+                  ((0 0 1) ( 0 0))
+                  ((0 0 13) (0 0 0))
+                  ((0 0 -4) (0 0 0))))
+
 (defun velocity (a b)
   (cond
     ((< a b) 1)
@@ -48,6 +63,21 @@
                    ((4 -8 8) (0 0 0))
                    ((3 5 -1) (0 0 0))))
 
+(defun sample2 () '(((-1 0 0) (0 0 0))
+                   ((2 0 0) (0 0 0))
+                   ((4 0 0) (0 0 0))
+                   ((3 0 0) (0 0 0))))
+
+(defun sample3 () '(((0 0 0) (0 0 0))
+                   ((0 -10 0) (0 0 0))
+                   ((0 -8 0) (0 0 0))
+                   ((0 5 0) (0 0 0))))
+
+(defun sample4 () '(((0 0 2) (0 0 0))
+                   ((0 0 -7) (0 0 0))
+                   ((0 0 8) (0 0 0))
+                   ((0 0 -1) (0 0 0))))
+
 (defun calculate-energy (list)
   (reduce #'(lambda (acc y) (+ acc (power y))) list :initial-value 0))
 
@@ -58,3 +88,9 @@
 (time (assert (= 8454 (calculate-energy (car (one-step (input) 1000))))))
 
 (time (assert (equal (sample) (car (one-step (sample) 2772)))))
+
+(defun find-same (input)
+  (let ((first input))
+    (do ((next (car (one-step first 1)) (car (one-step next 1)))
+         (count 1 (1+ count)))
+        ((equal input next) count))))
