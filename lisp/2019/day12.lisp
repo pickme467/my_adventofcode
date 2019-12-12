@@ -3,35 +3,20 @@
                   ((-15 -3 13) (0 0 0))
                   ((3 7 -4) (0 0 0))))
 
-(defun input2 () '(((-10 0 0) (0 0 0))
-                  ((1 0 0) ( 0 0))
-                  ((-15 0 0) (0 0 0))
-                  ((3 0 0) (0 0 0))))
-
-(defun input3 () '(((0 -13 0) (0 0 0))
-                  ((0 2 0) ( 0 0))
-                  ((0 -3 0) (0 0 0))
-                  ((0 7 0) (0 0 0))))
-
-(defun input4 () '(((0 0 7) (0 0 0))
-                  ((0 0 1) ( 0 0))
-                  ((0 0 13) (0 0 0))
-                  ((0 0 -4) (0 0 0))))
-
 (defun velocity (a b)
   (cond
     ((< a b) 1)
     ((> a b) -1)
     (t 0)))
 
-(defun new-velocity (position-velocity1 position-velocity2 position-velocity3 position-velocity4)
-  (let* ((velocity-change1
-          (velocity-change position-velocity1 position-velocity2))
-         (velocity-change2
-          (velocity-change position-velocity1 position-velocity3))
-         (velocity-change3
-          (velocity-change position-velocity1 position-velocity4)))
-    (mapcar #'+ velocity-change1 velocity-change2 velocity-change3 (nth 1 position-velocity1))))
+(defun new-velocity (list-of-positions)
+  (let ((calculating-for (car list-of-positions))
+        (rest (cdr list-of-positions))
+        (calculated ()))
+    (dolist (second-position rest)
+      (let ((velocity-change (velocity-change calculating-for second-position)))
+        (setf calculated (push velocity-change calculated))))
+    (apply #'mapcar #'+ (nth 1 calculating-for) calculated)))
 
 
 (defun velocity-change (position-velocity1 position-velocity2)
@@ -40,43 +25,25 @@
 (defun new-position (position velocity)
   (mapcar #'+ position velocity))
 
-(defun one-step (input times)
-  (let ((steps (list input)))
-    (dotimes (n times)
-      (let* ((current-step (car steps))
-             (next-velocity1 (new-velocity (nth 0 current-step) (nth 1 current-step) (nth 2 current-step) (nth 3 current-step)))
-             (next-position1 (new-position (nth 0 (nth 0 current-step)) next-velocity1))
-             (next-velocity2 (new-velocity (nth 1 current-step) (nth 0 current-step) (nth 2 current-step) (nth 3 current-step)))
-             (next-position2 (new-position (nth 0 (nth 1 current-step)) next-velocity2))
-             (next-velocity3 (new-velocity (nth 2 current-step) (nth 1 current-step) (nth 0 current-step) (nth 3 current-step)))
-             (next-position3 (new-position (nth 0 (nth 2 current-step)) next-velocity3))
-             (next-velocity4 (new-velocity (nth 3 current-step) (nth 1 current-step) (nth 2 current-step) (nth 0 current-step)))
-             (next-position4 (new-position (nth 0 (nth 3 current-step)) next-velocity4)))
-        (setf steps (push (list (list next-position1 next-velocity1)
-                                (list next-position2 next-velocity2)
-                                (list next-position3 next-velocity3)
-                                (list next-position4 next-velocity4)) steps))))
-    steps))
+(defun one-step (input)
+  (let ((result ()))
+    (dolist (element input)
+      (let* ((other-elements (remove element input))
+             (position (nth 0 element))
+             (all-elements (concatenate 'list (list element) other-elements))
+             (next-velocity
+              (new-velocity all-elements))
+             (next-position
+              (new-position position next-velocity)))
+        (setf result (push (list next-position next-velocity) result))))
+    (reverse result)
+    result))
 
-(defun sample () '(((-1 0 2) (0 0 0))
-                   ((2 -10 -7) (0 0 0))
-                   ((4 -8 8) (0 0 0))
-                   ((3 5 -1) (0 0 0))))
-
-(defun sample2 () '(((-1 0 0) (0 0 0))
-                   ((2 0 0) (0 0 0))
-                   ((4 0 0) (0 0 0))
-                   ((3 0 0) (0 0 0))))
-
-(defun sample3 () '(((0 0 0) (0 0 0))
-                   ((0 -10 0) (0 0 0))
-                   ((0 -8 0) (0 0 0))
-                   ((0 5 0) (0 0 0))))
-
-(defun sample4 () '(((0 0 2) (0 0 0))
-                   ((0 0 -7) (0 0 0))
-                   ((0 0 8) (0 0 0))
-                   ((0 0 -1) (0 0 0))))
+(defun multiple-steps (input time)
+  (let ((next input))
+    (dotimes (n time)
+      (setf next (one-step next)))
+    next))
 
 (defun calculate-energy (list)
   (reduce #'(lambda (acc y) (+ acc (power y))) list :initial-value 0))
@@ -84,13 +51,30 @@
 (defun power (x)
   (reduce #'* (map 'list #'(lambda (list) (apply #'+ (map 'list #'abs list))) x)))
 
-;; day 12 part 1
-(time (assert (= 8454 (calculate-energy (car (one-step (input) 1000))))))
-
-(time (assert (equal (sample) (car (one-step (sample) 2772)))))
-
 (defun find-same (input)
   (let ((first input))
-    (do ((next (car (one-step first 1)) (car (one-step next 1)))
+    (do ((next (one-step first) (one-step next))
          (count 1 (1+ count)))
         ((equal input next) count))))
+
+(defun get-nth-only (nth input)
+  (map 'list #'(lambda (point-velocity)
+                 (let* ((point (car point-velocity))
+                        (velocity (car (cdr point-velocity)))
+                        (nth-value (nth nth point))
+                        (zero-point (make-list (length point) :initial-element 0)))
+                   (setf (nth nth zero-point) nth-value)
+                   (list zero-point velocity))) input))
+
+(defun calculate-repeat-count (input)
+  (let ((number-of-coordinates (length (nth 0 (car input))))
+        (result ()))
+    (dotimes (n number-of-coordinates)
+      (setf result (push (find-same (get-nth-only n input)) result)))
+    (apply #'lcm result)))
+
+;; day 12 part 1
+(time (assert (= 8454 (calculate-energy (multiple-steps (input) 1000)))))
+
+;; day 12 part 2
+(time (assert (= 362336016722948 (calculate-repeat-count (input)))))

@@ -211,13 +211,11 @@
        (list (1- x) y new-heading)))))
 
 (defun find-new-heading (current direction)
-  (let* ((directions (list 'up 'right 'down 'left 'up))
-         (current-index (position current directions)))
+  (let ((directions-right (list 'up 'right 'down 'left 'up))
+        (directions-left (list 'up 'left 'down 'right 'up)))
     (cond
-      ((= 0 direction) (decf current-index))
-      (t (incf current-index)))
-    (if (< current-index 0) (setf current-index (- (length directions) 2)))
-    (nth current-index directions)))
+      ((= 0 direction) (nth (1+ (position current directions-left)) directions-left))
+      (t (nth (1+ (position current directions-right)) directions-right)))))
 
 (defun make-paint (hash)
   (let ((max-x 0)
