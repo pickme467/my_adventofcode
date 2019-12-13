@@ -176,11 +176,6 @@
 (defun sethash (key value hash)
   (setf (gethash key hash) value))
 
-(defun copy-hash (source)
-  (let ((new-hash (make-hash-table :test #'equal)))
-    (maphash #'(lambda (key value) (sethash key value new-hash)) source)
-    new-hash))
-
 (defun get-value (pos-or-value mode relative program)
   (let ((value
          (cond
@@ -277,7 +272,7 @@
          (calculate input (+ 4 start) program relative output))
         ((= opcode 3)
          (if (null input)
-             (values 'input (list start program relative output))
+             (values 'input (list output start program relative))
              (progn
                (do-input (pop input) p1 relative start program)
                (calculate input (+ 2 start) program relative output))))
@@ -313,69 +308,14 @@
       (incf address))
     hash))
 
-(defun remember-paintings (start input)
-  (let ((result (make-hash-table :test #'equal))
-        (current-location '(0 0 up)))
-    (do ((context (calculate (list start) 0 (list-to-hash input) 0 ())
-                  (apply #'calculate (list (get-color current-location result)) context)))
-        ((equal 'done context) (values (hash-table-count result) result))
-      (let ((output (nth 3 context)))
-        (if  (= 0 (mod (length output) 2))
-             (let ((color (nth 1 output))
-                   (direction (nth 0 output)))
-               (paint current-location color result)
-               (setf current-location (update-location current-location direction))))))))
 
-(defun paint (location color hash)
-  (let ((x (nth 0 location))
-        (y (nth 1 location)))
-    (sethash (list x y) color hash)))
 
-(defun get-color (location hash)
-  (let* ((x (nth 0 location))
-         (y (nth 1 location))
-         (color (gethash (list x y) hash)))
-    (if (null color) 0 color)))
 
-(defun update-location (location direction)
-  (let* ((x (nth 0 location))
-         (y (nth 1 location))
-         (new-heading (find-new-heading (nth 2 location) direction)))
-    (cond
-      ((equal new-heading 'up)
-       (list x (1- y) new-heading))
-      ((equal new-heading 'right)
-       (list (1+ x) y new-heading))
-      ((equal new-heading 'down)
-       (list x (1+ y) new-heading))
-      ((equal new-heading 'left)
-       (list (1- x) y new-heading)))))
 
-(defun find-new-heading (current direction)
-  (let ((directions-right (list 'up 'right 'down 'left 'up))
-        (directions-left (list 'up 'left 'down 'right 'up)))
-    (cond
-      ((= 0 direction) (nth (1+ (position current directions-left)) directions-left))
-      (t (nth (1+ (position current directions-right)) directions-right)))))
 
-(defun make-paint (hash)
-  (let ((max-x 0)
-        (max-y 0))
-    (maphash #'(lambda (key value)
-                 (declare (ignore value))
-                 (let ((x (nth 0 key))
-                       (y (nth 1 key)))
-                   (if (< max-x x) (setf max-x x))
-                   (if (< max-y y) (setf max-y y)))) hash)
-    (dotimes (y (1+ max-y))
-      (dotimes (x (1+ max-x))
-        (format t "~a" (color-to-space-or-hash (get-color (list x y) hash))))
-      (format t "~%"))))
 
-(defun color-to-space-or-hash (color)
-  (if (= 0 color) #\  #\#))
 
-(defun exectute-on-labirynth (input function)
+(defun execute-on-labirynth (input function)
   (multiple-value-bind (done output)
       (calculate '(0) 0 input 0 ())
     (if (equal 'done done)
@@ -397,60 +337,45 @@
               (if (= type (nth n output))
                   (return (list (nth (- n 2) output) (nth (1- n) output)))))))
 
-(defun find-the-paddle (output)
-  (find-element-position 3 output))
+(defun find-the-paddle (last-paddle output)
+  (let ((paddle (find-element-position 3 output)))
+    (cond
+      ((null paddle) last-paddle)
+      (t paddle))))
 
 (defun find-the-ball (output)
   (find-element-position 4 output))
 
 (defun change-program-at-address (address value program)
-  (setf (gethash address program) value))
-
-(defun game (input)
-  (let ((hash (list-to-hash input)))
-    (multiple-value-bind (done game-field) (calculate '() 0 hash 0 ())
-      (declare (ignore done))
-      (let ((ball (find-the-ball (car game-field)))
-            (paddle (find-the-paddle (car game-field))))
-        (format t "ball: ~a, paddle ~a~%" ball paddle)
-        (change-program-at-address 0 2 hash)
-        (let* ((joystick (joystick-position ball paddle))
-               (arguments (list (list joystick) 0 hash 0 ())))
-          (dotimes (n 1000)
-            (format t "Dotimes~% arguments: ~a~%" arguments)
-            (multiple-value-bind (state output) (apply #'calculate arguments)
-              (format t "Iteration~%")
-              (cond
-                ((equal state 'input)
-                 (setf joystick (joystick-position
-                                 (find-the-ball (nth 3 output))
-                                 (find-the-paddle (nth 3 output))))
-                 (format t "Labirynth ball ~a pad ~a~%" (find-the-ball (nth 3 output)) (find-the-paddle (nth 3 output)))
-                 (setf arguments
-                       (list (list joystick) (nth 0 output) (nth 1 output) (nth 2 output) nil)))
-                ((equal state 'done)
-                 (format t "output: ~a~%" (car output))
-                 (cond
-                   ((= 0 (count-blocks (car output)))
-                    (return output))
-                   (t
-                    (format t "ball: ~a, paddle: ~a~%" (find-the-ball (car output)) (find-the-paddle (car output)))
-                    (let ((new-data (cdr output)))
-                      (format t "new data: ~a~%" new-data)
-                      (setf joystick (joystick-position
-                                      (find-the-ball (car output))
-                                      (find-the-paddle (car output))))
-                      (setf arguments
-                            (list (list joystick) 0 (nth 1 new-data) 0 nil))))))))))))))
+  (setf (gethash address program) value)
+  program)
 
 (defun joystick-position (ball paddle)
   (let ((x-ball (nth 0 ball))
         (x-paddle (nth 0 paddle)))
     (cond
-      ((> x-ball x-paddle) 1)
       ((< x-ball x-paddle) -1)
+      ((> x-ball x-paddle) 1)
       (t 0))))
 
-;; day 13 part 1
+(defun play-game (input)
+  (multiple-value-bind (action data) (calculate '() 0 input 0 nil)
+    (declare (ignore action))
+    (let* ((last-paddle '(0 0)))
+      (dotimes (n 10000)
+        (let* ((output (nth 0 data))
+               (ball (find-the-ball output))
+               (paddle (find-the-paddle last-paddle output))
+               (joystick (joystick-position ball paddle)))
+          (setf last-paddle paddle)
+          (multiple-value-bind (action new-data) (calculate (list joystick) (nth 1 data) (nth 2 data) (nth 3 data) nil)
+            (if (equal action 'done)
+                (return (car (car new-data))))
+            (setf data new-data)
+            nil))))))
 
-(time (assert (= 420 (exectute-on-labirynth (list-to-hash (input)) #'count-blocks))))
+;; day 13 part 1
+(time (assert (= 420 (execute-on-labirynth (list-to-hash (input)) #'count-blocks))))
+
+;; day 13 part 2
+(time (assert (= 21651 (play-game (change-program-at-address 0 2 (list-to-hash (input)))))))
