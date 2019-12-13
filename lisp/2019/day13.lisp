@@ -268,7 +268,7 @@
     (multiple-value-bind (opcode p1 p2 p3) (decode-command command)
       (cond
         ((= opcode 99)
-         (values 'done output))
+         (values 'done (list output start program relative)))
         ((= opcode 1)
          (do-add p1 p2 p3 relative start program)
          (calculate input (+ 4 start) program relative output))
@@ -375,23 +375,82 @@
 (defun color-to-space-or-hash (color)
   (if (= 0 color) #\  #\#))
 
-(defun labirynth (input)
+(defun exectute-on-labirynth (input function)
   (multiple-value-bind (done output)
-      (calculate '(0) 0 (list-to-hash input) 0 ())
-    (setf output (reverse output))
-    (let ((counter 0))
-      (dotimes (n (length output))
-        (if (= 2 (mod n 3))
-            (if (= 2 (nth n output))
-                (incf counter))))
-      counter)))
+      (calculate '(0) 0 input 0 ())
+    (if (equal 'done done)
+        (funcall function (car output)))))
+
+(defun count-blocks (output)
+  (setf output (reverse output))
+  (let ((counter 0))
+    (dotimes (n (length output))
+      (if (= 2 (mod n 3))
+          (if (= 2 (nth n output))
+              (incf counter))))
+    counter))
+
+(defun find-element-position (type output)
+  (setf output (reverse output))
+  (dotimes (n (length output))
+          (if (= 2 (mod n 3))
+              (if (= type (nth n output))
+                  (return (list (nth (- n 2) output) (nth (1- n) output)))))))
+
+(defun find-the-paddle (output)
+  (find-element-position 3 output))
+
+(defun find-the-ball (output)
+  (find-element-position 4 output))
+
+(defun change-program-at-address (address value program)
+  (setf (gethash address program) value))
 
 (defun game (input)
   (let ((hash (list-to-hash input)))
-    (setf (gethash 0 hash) 2)
-    (multiple-value-bind (done output) (calculate '(0) 0 hash 0 ())
-      (format t "~a~% ~a~%" output done))))
+    (multiple-value-bind (done game-field) (calculate '() 0 hash 0 ())
+      (declare (ignore done))
+      (let ((ball (find-the-ball (car game-field)))
+            (paddle (find-the-paddle (car game-field))))
+        (format t "ball: ~a, paddle ~a~%" ball paddle)
+        (change-program-at-address 0 2 hash)
+        (let* ((joystick (joystick-position ball paddle))
+               (arguments (list (list joystick) 0 hash 0 ())))
+          (dotimes (n 1000)
+            (format t "Dotimes~% arguments: ~a~%" arguments)
+            (multiple-value-bind (state output) (apply #'calculate arguments)
+              (format t "Iteration~%")
+              (cond
+                ((equal state 'input)
+                 (setf joystick (joystick-position
+                                 (find-the-ball (nth 3 output))
+                                 (find-the-paddle (nth 3 output))))
+                 (format t "Labirynth ball ~a pad ~a~%" (find-the-ball (nth 3 output)) (find-the-paddle (nth 3 output)))
+                 (setf arguments
+                       (list (list joystick) (nth 0 output) (nth 1 output) (nth 2 output) nil)))
+                ((equal state 'done)
+                 (format t "output: ~a~%" (car output))
+                 (cond
+                   ((= 0 (count-blocks (car output)))
+                    (return output))
+                   (t
+                    (format t "ball: ~a, paddle: ~a~%" (find-the-ball (car output)) (find-the-paddle (car output)))
+                    (let ((new-data (cdr output)))
+                      (format t "new data: ~a~%" new-data)
+                      (setf joystick (joystick-position
+                                      (find-the-ball (car output))
+                                      (find-the-paddle (car output))))
+                      (setf arguments
+                            (list (list joystick) 0 (nth 1 new-data) 0 nil))))))))))))))
+
+(defun joystick-position (ball paddle)
+  (let ((x-ball (nth 0 ball))
+        (x-paddle (nth 0 paddle)))
+    (cond
+      ((> x-ball x-paddle) 1)
+      ((< x-ball x-paddle) -1)
+      (t 0))))
 
 ;; day 13 part 1
 
-(time (assert (= 420 (labirynth (input)))))
+(time (assert (= 420 (exectute-on-labirynth (list-to-hash (input)) #'count-blocks))))
