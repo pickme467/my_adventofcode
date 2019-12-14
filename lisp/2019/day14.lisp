@@ -177,12 +177,12 @@
 (defun count-ore (input)
   (get-quantity 'ore (reduce-ingredient 'fuel (normalize input) (newhash))))
 
-(defun count-fuel (input)
+(defun count-fuel (input ore-count)
   (let ((dictionary (normalize input))
         (output-hash (newhash))
         (ore 0))
     (do ((counter 0 (1+ counter)))
-        ((> ore 1000000000000) (1- counter))
+        ((> ore ore-count) (1- counter))
       (setf output-hash (reduce-ingredient 'fuel dictionary output-hash))
       (setf ore (get-quantity 'ore output-hash)))))
 
@@ -223,10 +223,10 @@
 (assert (= 2210736 (count-ore (sample5))))
 
 ;; long execution
-;;(assert (= 460664 (count-fuel (sample5))))
+(assert (= 460664 (count-fuel (sample5) 1000000000000)))
 
 ;; day 14 part 1
 (time (assert (= 2556890 (count-ore (input)))))
 
 ;; day 14 part 2 (calculates a bit long)
-;;(time (assert (= 1120408 (count-fuel (input)))))
+(time (assert (= 1120408 (count-fuel (input) 1000000000000))))
