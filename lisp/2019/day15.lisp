@@ -220,20 +220,21 @@
         (t
          (multiple-value-bind (type result)
              (apply #'calculate (list direction) context)
-           (if (equal type 'input)
-               (progn
-                 (let ((output (get-output-from-result result))
-                       (x (+ old-x (x-delta direction)))
-                       (y (+ old-y (y-delta direction))))
-                   (cond ((= 2 (car output))
-                          (sethash 'found (list output x y) found)
-                          context)
-                         ((or (= 0 (car output)) (visitedp x y map)) nil)
-                         (t
-                          (fill-empty x y map)
-                          (dotimes (n 4)
-                            (let ((context-copy (make-context-from-result result)))
-                              (recursive (1+ n) context-copy x y map list found))))))))))))
+           (declare (ignore type))
+           (let ((output (get-output-from-result result))
+                 (x (+ old-x (x-delta direction)))
+                 (y (+ old-y (y-delta direction))))
+             (cond
+               ((= 2 (car output))
+                (sethash 'found (list output x y) found)
+                context)
+               ((or (= 0 (car output))(visitedp x y map))
+                nil)
+               (t
+                (fill-empty x y map)
+                (dotimes (n 4)
+                  (let ((context-copy (make-context-from-result result)))
+                    (recursive (1+ n) context-copy x y map list found))))))))))
 
 (defun get-output-from-result (result)
   (nth 0 result))
@@ -273,16 +274,14 @@
                        (y (nth 1 pos)))
                    (cond
                      ((equal status 'filled) t)
-                     (t
-                      (if
-                       (or
-                        (filledp (1- x) y map)
-                        (filledp (1+ x) y map)
-                        (filledp x (1+ y) map)
-                        (filledp x (1- y) map))
-                       (setf to-put (push pos to-put))))))) map)
-    (dolist (e to-put)
-      (put-oxygen (nth 0 e) (nth 1 e) map))))
+                     ((or
+                       (filledp (1- x) y map)
+                       (filledp (1+ x) y map)
+                       (filledp x (1+ y) map)
+                       (filledp x (1- y) map))
+                      (setf to-put (push pos to-put)))))) map)
+    (dolist (point to-put)
+      (put-oxygen (nth 0 point) (nth 1 point) map))))
 
 (defun put-oxygen (x y map)
   (cond
@@ -305,7 +304,7 @@
 (defun finished-filling (status)
   (> (hash-table-count status) 0))
 
- (defun all-filledp (map)
+(defun all-filledp (map)
   (let ((filled t))
     (maphash #'(lambda (k v)
                  (declare (ignore k))
