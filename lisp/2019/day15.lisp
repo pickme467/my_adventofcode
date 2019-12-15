@@ -259,13 +259,12 @@
 (defun bubble-with-oxygen (input)
   (multiple-value-bind (length x y  map) (find-oxygen input)
     (declare (ignore length))
-    (let ((oxygen-put -1))
-      (fill-empty x y map)
-      (put-oxygen x y map)
-      (do
-       ((count 0 (1+ count)))
-       ((or (= 0 oxygen-put) (all-filledp map)) count)
-        (setf oxygen-put (put-oxygen-to-neighbours map))))))
+    (fill-empty x y map)
+    (put-oxygen x y map)
+    (do
+     ((count 0 (1+ count)))
+     ((all-filledp map) count)
+      (put-oxygen-to-neighbours map))))
 
 (defun put-oxygen-to-neighbours (map)
   (let ((to-put ()))
@@ -283,8 +282,7 @@
                         (filledp x (1- y) map))
                        (setf to-put (push pos to-put))))))) map)
     (dolist (e to-put)
-      (put-oxygen (nth 0 e) (nth 1 e) map))
-    (length to-put)))
+      (put-oxygen (nth 0 e) (nth 1 e) map))))
 
 (defun put-oxygen (x y map)
   (cond
