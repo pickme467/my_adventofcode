@@ -137,21 +137,37 @@
          (p3 (rem (/ (- command opcode (* 100 p1) (* 1000 p2)) 10000) 10)))
     (values opcode p1 p2 p3)))
 
+(defun program-to-hash (list)
+  (let ((i 0)
+        (hash (newhash)))
+    (dolist (k list)
+      (sethash i k hash)
+      (incf i))
+    hash))
+
 (defun list-to-hash (list)
   (let ((x 0)
         (y 0)
-        (hash (newhash)))
+        (hash (newhash))
+        (start (list 0 0)))
     (dolist (element list)
-      (cond ((= element 10) (incf y))
+      (cond ((= element 10)
+             (incf y)
+             (setf x 0))
             ((or (= element 35)
-                 (= element (char-code #\<))
-                 (= element (char-code #\>))
-                 (= element (char-code #\^))
-                 (= element (char-code #\v))))
-            (sethash (list x y) element hash)
-            (t nil))
-      (incf x))
-    hash))
+                 (startp element))
+             (sethash (list x y) element hash)
+             (if (startp element)
+                 (setf start (list x y)))
+             (incf x))
+            (t (incf x))))
+    (values hash start)))
+
+(defun startp (element)
+  (or (= element (char-code #\<))
+      (= element (char-code #\>))
+      (= element (char-code #\^))
+      (= element (char-code #\v))))
 
 (defun count-intersections (hash)
   (let ((count 0))
@@ -159,8 +175,16 @@
                  (declare (ignore v))
                  (let ((x (nth 0 pos))
                        (y (nth 1 pos)))
-                   )) hash)
+                   (setf count (+ count (intersection-value x y hash))))) hash)
     count))
+
+(defun intersection-value (x y hash)
+  (if (or (null (gethash (list (1+ x) y) hash))
+          (null (gethash (list (1- x) y) hash))
+          (null (gethash (list x (1+ y)) hash))
+          (null (gethash (list x (1- y)) hash)))
+      0
+      (* x y)))
 
 (defun print-labirynth (input)
   (map 'string #'code-char input))
@@ -168,6 +192,80 @@
 (defun get-scaffold (input)
   (multiple-value-bind (type result) (calculate () 0 input 0 ())
     (declare (ignore type))
-    (nth 0 result)))
+    (reverse (nth 0 result))))
 
-()
+(defun vectorize (input)
+  (let ((vectors (list 'l)))
+    (multiple-value-bind (hash start) (list-to-hash input)
+      (do*
+       ((starting start finish)
+        (last-direction nil direction)
+        (direction (next-direction starting '() hash)
+                   (next-direction starting direction hash))
+        (finish (find-last-point starting direction hash)
+                (find-last-point starting direction hash)))
+       ((donep direction) vectors)
+        (if (not (null last-direction))
+            (setf vectors (push (vectors-to-direction last-direction direction) vectors)))
+        (setf vectors (push (vector-lenght (list starting finish)) vectors))))
+    (reverse vectors)))
+
+(defun donep (direction)
+  (null direction))
+
+(defun find-last-point (first direction hash)
+  (do ((length 1 (1+ length)))
+      ((null (gethash (move first (scale length direction)) hash))
+       (move first (scale (1- length) direction)))))
+
+(defun scale (length vector)
+  (map 'list #'(lambda (x) (* x length)) vector))
+
+(defun next-direction (from last-vector hash)
+  (let ((new-vectors (remove (scale -1 last-vector) '((-1 0) (1 0) (0 -1) (0 1)) :test #'equal)))
+    (dolist (new-vector new-vectors)
+      (if (not (null (gethash (move from new-vector) hash))) (return new-vector)))))
+
+(defun move (point vector)
+  (mapcar #'+ point vector))
+
+(defun vector-length (vector)
+  (let ((start (nth 0 vector))
+        (end (nth 1 vector)))
+    (abs (reduce #'+ (mapcar #'- start end)))))
+
+(defun vectors-to-direction (start turn)
+  (let ((right-vectors '(((-1 0) (0 -1))
+                         ((0 1) (-1 0))
+                         ((0 -1) (1 0))
+                         ((1 0) (0 1)))))
+    (if (find (list start turn) right-vectors :test #'equal)
+        'r
+        'l)))
+
+(defun program-robot (input)
+  (let* ((main-program
+          (concatenate 'list (program-to-list "A,B,A,C,B,C,A,C,B,C") '(10)))
+         (routine-a
+          (concatenate 'list (program-to-list "L,8,R,10,L,10") '(10)))
+         (routine-b
+          (concatenate 'list (program-to-list "R,10,L,8,L,8,L,10") '(10)))
+         (routine-c
+          (concatenate 'list (program-to-list "L,4,L,6,L,8,L,8") '(10)))
+         (feed (concatenate 'list (program-to-list "n") '(10)))
+         (whole-program (concatenate 'list main-program routine-a routine-b routine-c feed)))
+    (sethash 0 2 input)
+    (multiple-value-bind (type result) (calculate whole-program 0 input 0 ())
+      (declare (ignore type))
+      (car (car result)))))
+
+(defun program-to-list (program)
+  (map 'list #'char-code program))
+
+;; day 17, part one
+(time (assert (= 5940
+                 (count-intersections
+                  (list-to-hash (get-scaffold (program-to-hash (input))))))))
+
+;; day 17, part two
+(time (assert (= 923795 (program-robot (program-to-hash (input))))))
