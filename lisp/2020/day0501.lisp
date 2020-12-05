@@ -8,16 +8,9 @@
           return k))
 
 (defun to-number (input)
-  (let* ((n (string input))
-         (r (subseq n 0 7))
-         (c (subseq n 7)))
-    (+ (* 8 (row-to-integer r)) (col-to-integer c))))
-
-(defun row-to-integer (row)
-  (parse-integer (substitute #\0 #\F (substitute #\1 #\B row)) :radix 2))
-
-(defun col-to-integer (col)
-  (parse-integer (substitute #\0 #\L (substitute #\1 #\R col)) :radix 2))
+  (parse-integer
+   (substitute #\0 #\F (substitute #\1 #\B (substitute #\0 #\L (substitute #\1 #\R (string input)))))
+   :radix 2))
 
 (defun input ()
   '(FFFBBFBLLR
