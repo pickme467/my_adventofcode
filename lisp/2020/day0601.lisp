@@ -16,8 +16,8 @@
 (defun sum-unique (list)
   (length (remove-duplicates (apply #'concatenate 'string list))))
 
-(defun check-intersection (list)
-  (loop for i in list for k = (concatenate 'list i) then (intersection k (concatenate 'list i))
+(defun check-intersection (sets)
+  (loop for i in sets for k = (concatenate 'list i) then (intersection k (concatenate 'list i))
         finally (return (length k))))
 
 (defun input ()
