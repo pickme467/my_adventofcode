@@ -13,12 +13,11 @@
           do (push i answers)
         finally (return valid)))
 
-(defun sum-unique (list)
-  (length (remove-duplicates (apply #'concatenate 'string list))))
+(defun sum-unique (sets)
+  (length (reduce #'union (mapcar #'(lambda (s) (concatenate 'list (string s))) sets))))
 
 (defun check-intersection (sets)
-  (loop for i in sets for k = (concatenate 'list i) then (intersection k (concatenate 'list i))
-        finally (return (length k))))
+  (length (reduce #'intersection (mapcar #'(lambda (s) (concatenate 'list (string s))) sets))))
 
 (defun input ()
   "atxmhdzkjgivwcqu
