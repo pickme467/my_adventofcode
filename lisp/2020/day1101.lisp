@@ -1,12 +1,15 @@
 (defun day-10-2020-1 ()
-  (stabilize (input) #'update-value-simple))
+  (stabilize (input) #'nearest-neighbours))
 
 (defun day-10-2020-2 ()
-  (stabilize (input) #'update-value-ray))
+  (stabilize (input) #'furtherst-neighbours))
 
 (defun stabilize (input update-function)
   (loop for i = input then k for k = (new-state i update-function)
         when (equal-inputs i k) return (count-occupied k)))
+
+(defun count-occupied (input)
+  (loop for v being the hash-value in input count (equal v #\#)))
 
 (defun equal-inputs (a b)
   (loop for ak being the hash-keys in a
@@ -20,61 +23,44 @@
         do (setf (gethash ak output) (funcall update-function ak v input))
         finally (return output)))
 
-(defun update-value-simple (ak v input)
+(defun nearest-neighbours (ak v input)
   (cond ((and (equal v #\L)
-              (equal 0 (state-change-simple ak input))) #\#)
+              (equal 0 (neighbour-count ak input #'nearest))) #\#)
         ((and (equal v #\#)
-              (>= (state-change-simple ak input) 4)) #\L)
+              (>= (neighbour-count ak input #'nearest) 4)) #\L)
         (t v)))
 
-(defun state-change-simple (coords input)
-  (destructuring-bind (x y) coords
-    (loop for i in (list
-                    (list (1- x) y)
-                    (list (1+ x) y)
-                    (list x (1- y))
-                    (list x (1+ y))
-                    (list (1- x) (1- y))
-                    (list (1- x) (1+ y))
-                    (list (1+ x) (1- y))
-                    (list (1+ x) (1+ y)))
-          collecting (state-as-number i input) into count-list
-          finally (return (reduce #'+ count-list)))))
-
-(defun update-value-ray (ak v input)
+(defun furtherst-neighbours (ak v input)
   (cond ((and (equal v #\L)
-              (equal 0 (state-change-ray ak input))) #\#)
+              (equal 0 (neighbour-count ak input #'further))) #\#)
         ((and (equal v #\#)
-              (>= (state-change-ray ak input) 5)) #\L)
+              (>= (neighbour-count ak input #'further) 5)) #\L)
         (t v)))
 
-(defun state-change-ray (coords input)
+(defun neighbour-count (coords input function)
   (loop for i in (list
-                  #'(lambda (p) (list (1- (first p)) (second p)))
-                  #'(lambda (p) (list (1+ (first p)) (second p)))
-                  #'(lambda (p) (list (first p) (1- (second p))))
-                  #'(lambda (p) (list (first p) (1+ (second p))))
-                  #'(lambda (p) (list (1- (first p)) (1- (second p))))
-                  #'(lambda (p) (list (1- (first p)) (1+ (second p))))
-                  #'(lambda (p) (list (1+ (first p)) (1- (second p))))
-                  #'(lambda (p) (list (1+ (first p)) (1+ (second p)))))
-        collecting (ray-find-as-number coords i input) into count-list
-        finally (return (values (reduce #'+ count-list) count-list))))
+                  #'(lambda (x y) (list (1- x) y))
+                  #'(lambda (x y) (list (1+ x) y))
+                  #'(lambda (x y) (list x (1- y)))
+                  #'(lambda (x y) (list x (1+ y)))
+                  #'(lambda (x y) (list (1- x) (1- y)))
+                  #'(lambda (x y) (list (1- x) (1+ y)))
+                  #'(lambda (x y) (list (1+ x) (1- y)))
+                  #'(lambda (x y) (list (1+ x) (1+ y))))
+        collecting (funcall function coords i input) into count-list
+        finally (return (reduce #'+ count-list))))
 
-(defun ray-find-as-number (pos fun input)
-  (loop for i = (funcall fun pos) then (funcall fun i)
+(defun further (pos fun input)
+  (loop for i = (apply fun pos) then (apply fun i)
         when (equal #\# (gethash i input))
           return 1
         when (member (gethash i input) '(#\L nil))
           return 0))
 
-(defun state-as-number (key input)
-  (let ((value (gethash key input)))
+(defun nearest (pos fun input)
+  (let ((value (gethash (apply fun pos) input)))
     (cond ((equal value #\#) 1)
           (t 0))))
-
-(defun count-occupied (input)
-  (loop for v being the hash-value in input count (equal v #\#)))
 
 (defun make-hash (input)
   (let ((output (make-hash-table :test #'equal)))
