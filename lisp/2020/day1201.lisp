@@ -3,10 +3,10 @@
 (defun day-12-2020-2 () (do-float-by-waypoint (input)))
 
 (defun do-float (input)
-  (loop for i in input with dir = "E" with x = 0 with y = 0
-        do (setf dir (update-direction i dir))
-           (setf x (+ x (update-x i dir)))
-           (setf y (+ y (update-y i dir)))
+  (loop for i in input
+        for dir = (update-direction i "E") then (update-direction i dir)
+        for x = (update-x i dir) then (+ x (update-x i dir))
+        for y = (update-y i dir) then (+ y (update-y i dir))
         finally (return (+ (abs x) (abs y)))))
 
 (defun update-direction (command direction)
@@ -20,6 +20,10 @@
         for i = old then next for next = (second (assoc i table :test #'equal))
         finally (return next)))
 
+(defun left () '(("E" "N") ("N" "W") ("W" "S") ("S" "E")))
+
+(defun right () '(("E" "S") ("S" "W") ("W" "N") ("N" "E")))
+
 (defun distance (symbol)
   (parse-integer (subseq (string symbol) 1)))
 
@@ -27,35 +31,39 @@
   (subseq (string symbol) 0 1))
 
 (defun update-x (command direction)
-  (update-xy '("E" "W") command direction))
+  (update-xy "E" "W" command direction))
 
 (defun update-y (command direction)
-  (update-xy '("S" "N") command direction))
+  (update-xy "S" "N" command direction))
 
-(defun update-xy (axis command direction)
+(defun update-xy (inc-direction dec-direction command direction)
   (let  ((command-direction (direction command)))
-    (cond ((or (equal command-direction (first axis))
-               (and (equal command-direction "F") (equal direction (first axis)))) (distance command))
-          ((or (equal command-direction (second axis))
-               (and (equal command-direction "F") (equal direction (second axis)))) (- (distance command)))
+    (cond ((directional-move command-direction inc-direction direction) (distance command))
+          ((directional-move command-direction dec-direction direction) (- (distance command)))
           (t 0))))
+
+(defun directional-move (command-direction expected-direction current-direction)
+  (or (equal command-direction expected-direction)
+      (and (equal command-direction "F")
+           (equal current-direction expected-direction))))
 
 (defun do-float-by-waypoint (input)
   (loop for i in input
         for waypoint = (move-waypoint i '(10 -1)) then (move-waypoint i waypoint)
-        for ship = (move-ship i waypoint '(0 0)) then (move-ship i waypoint ship)
-        finally (return (+ (abs (first ship)) (abs (second ship))))))
+        for (x y) = (move-ship i waypoint '(0 0)) then (move-ship i waypoint (list x y))
+        finally (return (+ (abs x) (abs y)))))
 
 (defun move-waypoint (command waypoint)
   (let ((direction (direction command))
         (distance-or-angle (distance command)))
-    (cond ((equal direction "E") (list (+ (first waypoint) distance-or-angle) (second waypoint)))
-          ((equal direction "W") (list (- (first waypoint) distance-or-angle) (second waypoint)))
-          ((equal direction "S") (list (first waypoint) (+ (second waypoint) distance-or-angle)))
-          ((equal direction "N") (list (first waypoint) (- (second waypoint) distance-or-angle)))
-          ((member direction '("L" "R") :test #'equal)
-           (rotate-waypoint (/ distance-or-angle 90) direction waypoint))
-          (t waypoint))))
+    (destructuring-bind (x y) waypoint
+      (cond ((equal direction "E") (list (+ x distance-or-angle) y))
+            ((equal direction "W") (list (- x distance-or-angle) y))
+            ((equal direction "S") (list x (+ y distance-or-angle)))
+            ((equal direction "N") (list x (- y distance-or-angle)))
+            ((member direction '("L" "R") :test #'equal)
+             (rotate-waypoint (/ distance-or-angle 90) direction waypoint))
+            (t waypoint)))))
 
 (defun rotate-waypoint (times direction waypoint)
   (loop repeat times
@@ -65,17 +73,17 @@
 
 (defun rotate-it (direction waypoint)
   (destructuring-bind (x y) waypoint
-    (if (equal direction "R") (list (- y) x) (list y (- x)))))
+    (if (equal direction "R")
+        (list (- y) x)
+        (list y (- x)))))
 
 (defun move-ship (command waypoint ship)
   (if (equal "F" (direction command))
-      (list (+ (first ship) (* (distance command) (first waypoint)))
-            (+ (second ship) (* (distance command) (second waypoint))))
+      (destructuring-bind (x y) ship
+        (destructuring-bind (wx wy) waypoint
+                       (list (+ x (* (distance command) wx))
+                             (+ y (* (distance command) wy)))))
       ship))
-
-(defun left () '(("E" "N") ("N" "W") ("W" "S") ("S" "E")))
-
-(defun right () '(("E" "S") ("S" "W") ("W" "N") ("N" "E")))
 
 (defun input ()
   '(E2
