@@ -11,15 +11,15 @@
 (defun find-it (input)
   (loop for (offset time) in input with timeline = 0 with multiplier = 1
         do (loop when (not (equal (mod timeline time) (- time (mod offset time))))
-                   do (setf timeline (+ multiplier timeline))
+                   do (incf timeline multiplier)
                  else return 'done)
         (setf multiplier (* multiplier time))
         finally (return (1+ timeline))))
 
 (defun normalize (input)
-  (loop for i in (uiop:split-string input :separator ",") for counter = 0 then (1+ counter)
+  (loop for i in (uiop:split-string input :separator ",") for counter = 1 then (1+ counter)
         when (not (equal i "x"))
-          collect (list (1+ counter) (parse-integer i)) into output
+          collect (list counter (parse-integer i)) into output
         finally (return (sort output #'> :key #'second))))
 
 (defun input ()
