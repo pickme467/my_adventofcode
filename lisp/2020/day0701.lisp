@@ -33,7 +33,7 @@
                   table (+ count (* multiplier (sum-bags new-bags)))))))
 
 (defun update-count (bags multiplier)
-  (mapcar #'(lambda (bag) (list (get-key bag) (* multiplier (get-number bag)))) bags))
+  (mapcar (lambda (bag) (list (get-key bag) (* multiplier (get-number bag)))) bags))
 
 (defun sum-bags (bags)
   (reduce #'+ (mapcar #'get-number bags)))

@@ -1,6 +1,6 @@
 (defun day-13-2020-1 ()
   (let* ((distances
-           (mapcar #'(lambda (x) (list x (- (parse-integer x) (rem (first (input)) (parse-integer x)))))
+           (mapcar (lambda (x) (list x (- (parse-integer x) (rem (first (input)) (parse-integer x)))))
                    (remove "" (uiop:split-string (remove #\x (second (input))) :separator ",") :test #'equal)))
          (found (rassoc (reduce #'min distances :key #'second) distances :test #'equal :key #'car)))
     (* (parse-integer (first found)) (second found))))

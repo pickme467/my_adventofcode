@@ -11,8 +11,7 @@
             do (setf mask value)
           else
             do (setf (gethash type memory) (apply-mask mask value))
-          finally
-             (return (loop for v being the hash-values in memory sum v)))))
+          finally (return (loop for v being the hash-values in memory sum v)))))
 
 (defun apply-mask (mask value)
   (let ((v (parse-integer value)))
@@ -36,27 +35,24 @@
           else
             do (loop for i in (replace-x-rich mask (get-address type))
                      do (setf (gethash i memory) (parse-integer value)))
-          finally
-             (return (loop for v being the hash-values in memory sum v)))))
+          finally (return (loop for v being the hash-values in memory sum v)))))
 
 (defun get-address (string)
   (parse-integer (subseq string 4) :junk-allowed t))
 
 (defun replace-x-rich (mask value)
   (loop for b in (reverse (concatenate 'list mask)) for power = 1 then (* 2 power) with all-masks = ()
-        do (cond
-             ((null all-masks)
-              (cond ((equal b #\X) (setf all-masks (list 0 power)))
-                    ((equal b #\1) (setf all-masks (list power)))
-                (t (setf all-masks (list (boole boole-and power value))))))
-             (t
-              (cond ((equal b #\X) (loop for i in all-masks do (push (+ i power) all-masks)))
-                ((equal b #\1) (setf all-masks (mapcar #'(lambda (x) (+ power x)) all-masks)))
-                (t (setf all-masks (mapcar #'(lambda (x) (+ (boole boole-and power value) x)) all-masks))))))
+        do (if (null all-masks)
+               (cond ((equal b #\X) (setf all-masks (list 0 power)))
+                     ((equal b #\1) (setf all-masks (list power)))
+                     (t (setf all-masks (list (boole boole-and power value)))))
+               (cond ((equal b #\X) (loop for i in all-masks do (push (+ i power) all-masks)))
+                     ((equal b #\1) (setf all-masks (mapcar (lambda (x) (+ power x)) all-masks)))
+                     (t (setf all-masks (mapcar (lambda (x) (+ (boole boole-and power value) x)) all-masks)))))
         finally (return all-masks)))
 
 (defun parse (input)
-  (mapcar #'(lambda (x) (let ((y (uiop:split-string x :separator " ="))) (list (first y) (fourth y))))
+  (mapcar (lambda (x) (let ((y (uiop:split-string x :separator " ="))) (list (first y) (fourth y))))
           (uiop:split-string input :separator (string #\linefeed))))
 
 (defun input ()

@@ -14,10 +14,10 @@
         finally (return valid)))
 
 (defun sum-unique (sets)
-  (length (reduce #'union (mapcar #'(lambda (s) (concatenate 'list (string s))) sets))))
+  (length (reduce #'union (mapcar (lambda (s) (concatenate 'list (string s))) sets))))
 
 (defun check-intersection (sets)
-  (length (reduce #'intersection (mapcar #'(lambda (s) (concatenate 'list (string s))) sets))))
+  (length (reduce #'intersection (mapcar (lambda (s) (concatenate 'list (string s))) sets))))
 
 (defun input ()
   "atxmhdzkjgivwcqu

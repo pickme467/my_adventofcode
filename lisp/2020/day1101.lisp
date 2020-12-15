@@ -1,7 +1,7 @@
-(defun day-10-2020-1 ()
+(defun day-11-2020-1 ()
   (stabilize (input) #'nearest-neighbours))
 
-(defun day-10-2020-2 ()
+(defun day-11-2020-2 ()
   (stabilize (input) #'furtherst-neighbours))
 
 (defun stabilize (input update-function)
@@ -39,14 +39,14 @@
 
 (defun neighbour-count (coords input function)
   (loop for i in (list
-                  #'(lambda (x y) (list (1- x) y))
-                  #'(lambda (x y) (list (1+ x) y))
-                  #'(lambda (x y) (list x (1- y)))
-                  #'(lambda (x y) (list x (1+ y)))
-                  #'(lambda (x y) (list (1- x) (1- y)))
-                  #'(lambda (x y) (list (1- x) (1+ y)))
-                  #'(lambda (x y) (list (1+ x) (1- y)))
-                  #'(lambda (x y) (list (1+ x) (1+ y))))
+                  (lambda (x y) (list (1- x) y))
+                  (lambda (x y) (list (1+ x) y))
+                  (lambda (x y) (list x (1- y)))
+                  (lambda (x y) (list x (1+ y)))
+                  (lambda (x y) (list (1- x) (1- y)))
+                  (lambda (x y) (list (1- x) (1+ y)))
+                  (lambda (x y) (list (1+ x) (1- y)))
+                  (lambda (x y) (list (1+ x) (1+ y))))
         collecting (funcall function coords i input) into count-list
         finally (return (reduce #'+ count-list))))
 
