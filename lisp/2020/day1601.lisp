@@ -4,23 +4,19 @@
 (defun day-16-2020-2 ()
   (let ((my-ticket (second (parse-input (input)))))
     (loop repeat 6 for i in (allocate-correct-ticket-part (map-ticket-part-on-validator (input)))
-          collect (parse-integer (nth (first i) my-ticket)) into output
+          collect (nth (first i) my-ticket) into output
           finally (return (reduce #'* output)))))
 
 (defun validate-tickets (input)
   (destructuring-bind (rules my-ticket ticket-list) (parse-input input)
     (declare (ignore my-ticket))
-    (loop for tickets in ticket-list
-          sum (loop for ticket-part in tickets
-                    unless (validate-ticket-part ticket-part rules)
-                      sum (parse-integer ticket-part)))))
+    (reduce #'+ (mapcar #'(lambda (tickets) (sum-valid tickets rules)) ticket-list))))
+
+(defun sum-valid (tickets rules)
+  (reduce #'+ (remove-if (lambda (part) (not (validate-ticket-part part rules))) tickets)))
 
 (defun validate-ticket-part (part rules)
-  (loop for r in rules
-        when (funcall r (parse-integer part))
-          return t
-        finally
-           (return nil)))
+  (some (lambda (r) (funcall r part)) rules))
 
 (defun allocate-correct-ticket-part (index-lambda-list)
   (loop for (index lambdas) in (sort index-lambda-list (lambda (x y) (<= (length x) (length y))) :key #'second)
@@ -39,11 +35,7 @@
 (defun find-rule-for-fields (fields rules found-list)
   (loop for rule in rules for index = 0 then (1+ index) with found = (mapcar #'second found-list)
         when (and (not (member index found))
-                  (loop for field-part in fields
-                        unless (funcall rule (parse-integer field-part))
-                          return nil
-                        finally
-                           (return t)))
+                  (every (lambda (part) (funcall rule part)) fields))
           collect index into output
           finally (return output)))
 
@@ -53,22 +45,17 @@
     (remove-invalid ticket-list rules)))
 
 (defun remove-invalid (ticket-list rules)
-  (loop for ticket in ticket-list
-        when (valid ticket rules)
-          collect ticket into output
-        finally (return output)))
+  (remove-if (lambda (ticket) (not (valid ticket rules))) ticket-list))
 
 (defun valid (ticket rules)
-  (loop for part in ticket
-        unless (validate-ticket-part part rules)
-          return nil
-        finally (return t)))
+  (every (lambda (part) (validate-ticket-part part rules)) ticket))
 
 (defun parse-input (input)
   (destructuring-bind (header nearby-tickets) (split-by-word "nearby tickets:" input)
     (destructuring-bind (rules ticket) (split-by-word "your ticket:" header)
-      (list (parse-rules rules) (split-by-word-all "," ticket)
-            (mapcar (lambda (x) (split-by-word-all "," x)) (split-by-word-all (string #\linefeed) nearby-tickets))))))
+      (list (parse-rules rules) (mapcar #'parse-integer (split-by-word-all "," ticket))
+            (mapcar (lambda (x) (mapcar #'parse-integer (split-by-word-all "," x)))
+                    (split-by-word-all (string #\linefeed) nearby-tickets))))))
 
 (defun parse-rules (rules)
   (let ((rules (split-by-word-all (string #\linefeed) rules)))
