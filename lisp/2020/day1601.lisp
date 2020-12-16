@@ -10,10 +10,10 @@
 (defun validate-tickets (input)
   (destructuring-bind (rules my-ticket ticket-list) (parse-input input)
     (declare (ignore my-ticket))
-    (reduce #'+ (mapcar #'(lambda (tickets) (sum-valid tickets rules)) ticket-list))))
+    (reduce #'+ (mapcar #'(lambda (tickets) (sum-invalid tickets rules)) ticket-list))))
 
-(defun sum-valid (tickets rules)
-  (reduce #'+ (remove-if (lambda (part) (not (validate-ticket-part part rules))) tickets)))
+(defun sum-invalid (tickets rules)
+  (reduce #'+ (remove-if (lambda (part) (validate-ticket-part part rules)) tickets)))
 
 (defun validate-ticket-part (part rules)
   (some (lambda (r) (funcall r part)) rules))
