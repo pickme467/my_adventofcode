@@ -1,5 +1,4 @@
-(defun day-16-2020-1 ()
-  (validate-tickets (input)))
+(defun day-16-2020-1 () (validate-tickets (input)))
 
 (defun day-16-2020-2 ()
   (let ((my-ticket (second (parse-input (input)))))
@@ -12,11 +11,9 @@
     (declare (ignore my-ticket))
     (reduce #'+ (mapcar #'(lambda (tickets) (sum-invalid tickets rules)) ticket-list))))
 
-(defun sum-invalid (tickets rules)
-  (reduce #'+ (remove-if (lambda (part) (validate-ticket-part part rules)) tickets)))
+(defun sum-invalid (tickets rules) (reduce #'+ (remove-if (lambda (part) (validate-ticket-part part rules)) tickets)))
 
-(defun validate-ticket-part (part rules)
-  (some (lambda (r) (funcall r part)) rules))
+(defun validate-ticket-part (part rules) (some (lambda (r) (funcall r part)) rules))
 
 (defun allocate-correct-ticket-part (index-lambda-list)
   (loop for (index lambdas) in (sort index-lambda-list (lambda (x y) (<= (length x) (length y))) :key #'second)
@@ -37,31 +34,30 @@
         when (and (not (member index found))
                   (every (lambda (part) (funcall rule part)) fields))
           collect index into output
-          finally (return output)))
+        finally (return output)))
 
 (defun parse-remove-invalid (input)
   (destructuring-bind (rules my-ticket ticket-list) (parse-input input)
     (declare (ignore my-ticket))
     (remove-invalid ticket-list rules)))
 
-(defun remove-invalid (ticket-list rules)
-  (remove-if (lambda (ticket) (not (valid ticket rules))) ticket-list))
+(defun remove-invalid (ticket-list rules) (remove-if (lambda (ticket) (not (valid ticket rules))) ticket-list))
 
-(defun valid (ticket rules)
-  (every (lambda (part) (validate-ticket-part part rules)) ticket))
+(defun valid (ticket rules) (every (lambda (part) (validate-ticket-part part rules)) ticket))
 
 (defun parse-input (input)
   (destructuring-bind (header nearby-tickets) (split-by-word "nearby tickets:" input)
     (destructuring-bind (rules ticket) (split-by-word "your ticket:" header)
-      (list (parse-rules rules) (mapcar #'parse-integer (split-by-word-all "," ticket))
-            (mapcar (lambda (x) (mapcar #'parse-integer (split-by-word-all "," x)))
-                    (split-by-word-all (string #\linefeed) nearby-tickets))))))
+      (list (parse-rules rules) (split-by-comma-to-integer ticket)
+            (mapcar #'split-by-comma-to-integer (split-by-word-all (string #\linefeed) nearby-tickets))))))
+
+(defun split-by-comma-to-integer (list) (mapcar #'parse-integer (split-by-word-all "," list)))
 
 (defun parse-rules (rules)
   (let ((rules (split-by-word-all (string #\linefeed) rules)))
     (loop for rule in rules
           collect (destructuring-bind (range1 range2)
-                 (split-by-word-all "or" (second (split-by-word-all ":" rule)))
+                      (split-by-word-all "or" (second (split-by-word-all ":" rule)))
                     (make-lambda range1 range2)))))
 
 (defun split-by-word (word input)
@@ -79,12 +75,11 @@
         collect part into output))
 
 (defun make-lambda (rule1 rule2)
-    (destructuring-bind (start1 stop1) (split-by-word-all "-" rule1)
+  (destructuring-bind (start1 stop1) (split-by-word-all "-" rule1)
     (destructuring-bind (start2 stop2) (split-by-word-all "-" rule2)
-      (lambda (x) (or (and (>= x (parse-integer start1))
-                           (<= x (parse-integer stop1)))
-                      (and (>= x (parse-integer start2))
-                           (<= x (parse-integer stop2))))))))
+      (lambda (x) (or (and (>= x (parse-integer start1)) (<= x (parse-integer stop1)))
+                      (and (>= x (parse-integer start2)) (<= x (parse-integer stop2))))))))
+
 (defun input ()
   "departure location: 33-679 or 691-971
 departure station: 48-646 or 671-966
