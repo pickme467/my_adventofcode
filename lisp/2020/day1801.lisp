@@ -2,7 +2,7 @@
   (loop for i in (input) sum (resolve i)))
 
 (defun day-18-2020-2 ()
-  (loop for i in (input) sum (precedence i)))
+  (loop for i in (input) sum (precedence i 0)))
 
 (defun resolve (list-or-element)
   (unless (equal 'cons (type-of list-or-element)) (return-from resolve list-or-element))
@@ -10,20 +10,15 @@
   (destructuring-bind (element1 operation element2 &rest rest) list-or-element
     (resolve (concatenate 'list (list (eval (list operation (resolve element1) (resolve element2)))) rest))))
 
-(defun precedence (equation)
-  (if (integerp equation) (return-from precedence equation))
-  (if (integerp (first equation))
-      (precedence-2 (rest equation) (first equation))
-      (precedence-2 (rest equation) (precedence (first equation)))))
-
-(defun precedence-2 (list-or-element output)
-  (if (null list-or-element) (return-from precedence-2 output))
-  (destructuring-bind (operation element &rest rest) list-or-element
-    (cond ((equal '* operation) (* output (precedence (conc element rest))))
-          (t (precedence-2 rest (+ (precedence element) output))))))
+(defun precedence (list-or-element output)
+  (if (integerp list-or-element) (return-from precedence (+ list-or-element output)))
+  (destructuring-bind (e1 operation e2 &rest rest) list-or-element
+    (cond ((equal '* operation) (* (precedence e1 output) (precedence (conc (precedence e2 0) rest) 0)))
+          (t (precedence (conc (precedence e2 0) rest) (+ (precedence e1 0) output))))))
 
 (defun conc (l1 l2)
-  (concatenate 'list (list l1) l2))
+  (if (null l2) l1
+      (concatenate 'list (list l1) l2)))
 
 (defun input ()
   '((7 + (9 * 8 + 5 + 5 * (3 * 4 * 7 + 6 * 4)) * ((3 * 6 + 3 * 4 * 7 * 4) + 4 * 3 * 5 + 5 * (5 * 6 + 7)) * 2 + 6 * 4)
