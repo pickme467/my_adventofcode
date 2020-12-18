@@ -17,8 +17,7 @@
   (make-combination
    (loop for (mi ma) on (get-boundaries hash dimension) by #'cddr collect (range mi ma)) 0 () ()))
 
-(defun range (start end)
-  (loop for i from start to end collecting i))
+(defun range (start end) (loop for i from start to end collecting i))
 
 (defun get-boundaries (hash dimensions)
   (loop for i from 1 to dimensions
@@ -29,19 +28,17 @@
         collect min-max into lists
         finally (return (apply #'concatenate 'list lists))))
 
-(defun activep (coords hash)
-  (gethash coords hash))
+(defun get-value (coords hash) (or (gethash coords hash) 0))
 
 (defun new-state (coords change hash)
   (let ((neighbours (count-neighbours coords hash)))
-    (cond ((and (activep coords hash) (not (member neighbours '(2 3))))
+    (cond ((and (equal 1 (get-value coords hash)) (not (member neighbours '(2 3))))
            (remhash coords change))
-          ((and (not (activep coords hash)) (equal 3 neighbours))
+          ((and (equal 0 (get-value coords hash)) (equal 3 neighbours))
            (setf (gethash coords change) 1)))))
 
 (defun add-or-not (coords given-coords hash)
-  (if (and (not (equal coords given-coords))
-           (activep given-coords hash)) 1 0))
+  (if (equal coords given-coords) 0 (get-value given-coords hash)))
 
 (defun count-neighbours (coords hash)
   (let* ((sets (loop for i in coords collect (list (1- i) i (1+ i))))
