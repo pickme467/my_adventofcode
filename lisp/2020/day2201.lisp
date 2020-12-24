@@ -23,8 +23,10 @@
   (loop for i in (reverse (append p1 p2)) for k = 1 then (1+ k) sum (* i k)))
 
 (defun play-round (input)
-  (let ((result (if (> (first (first input)) (first (second input))) 'first 'second)))
-    (return-list result input)))
+  (return-list (first-or-second input) input))
+
+(defun first-or-second (input)
+  (if (> (first (first input)) (first (second input))) 'first 'second))
 
 (defun return-list (result input)
   (destructuring-bind (p1 p2) input
@@ -33,18 +35,15 @@
         (list (rest p1) (append (rest p2) (list (first p2) (first p1)))))))
 
 (defun play-round-recursive (input)
-  (let ((result (play-with-recursion input)))
-    (return-list result input)))
-
-(defun play-with-recursion (input)
   (destructuring-bind (p1 p2) input
     (cond ((and (<= (first p1) (length (rest p1)))
                 (<= (first p2) (length (rest p2))))
-           (first (play-full-game (list (subseq p1 1 (1+ (first p1)))
-                                        (subseq p2 1 (1+ (first p2))))
-                                  #'play-round-recursive)))
-          ((> (first p1) (first p2)) 'first)
-          (t 'second))))
+           (return-list
+            (first (play-full-game (list (subseq p1 1 (1+ (first p1)))
+                                         (subseq p2 1 (1+ (first p2))))
+                                   #'play-round-recursive))
+            input))
+          (t (play-round input)))))
 
 (defun input ()
   '(
