@@ -21,13 +21,13 @@
           finally (return hash))))
 
 (defun normalize (list)
-  (loop for i in list
-        for one-found = (= 1 i) then (or one-found (= 1 i))
-        when one-found
-          collect i into first
-        else
-          collect i into second
-        finally (return (append first second))))
+  (when (equal (first list) 1) (return-from normalize list))
+  (loop for i on list
+        when (equal 1 (cadr i))
+          return (let ((start (cdr i)))
+                   (setf (cdr (last i)) list)
+                   (setf (cdr i) nil)
+                   start)))
 
 (defun single-move-destructive (first last max hash)
   (declare (optimize (speed 3) (safety 0)))
