@@ -1,8 +1,8 @@
 (defun higher (input)
-  (loop for (x y . nil) on input sum (if (> (zeronull y) (zeronull x)) 1 0)))
+  (loop for (x y) on input sum (if (> (zeronull y) (zeronull x)) 1 0)))
 
 (defun higher-three (input)
-  (loop for (a b c . nil) on input collect (+ (zeronull a) (zeronull b) (zeronull c))))
+  (loop for (a b c) on input collect (+ (zeronull a) (zeronull b) (zeronull c))))
 
 (defun zeronull (x) (if (null x) 0 x))
 
