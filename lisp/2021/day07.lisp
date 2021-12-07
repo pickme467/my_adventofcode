@@ -1,19 +1,16 @@
-(defun count-moves (input)
+(defun count-moves (input alg)
   (loop for i from (apply #'min input) to (apply #'max input)
         minimize
-        (loop for j in input sum (abs (- j i)))))
-
-(defun count-moves-alg (input)
-  (loop for i from (apply #'min input) to (apply #'max input)
-        minimize
-        (loop for j in input sum (alg-sum (abs (- j i))))))
+        (loop for j in input sum (funcall alg (abs (- j i))))))
 
 (defun alg-sum (n)
   (* (/ (+ 1 n) 2) n))
 
-(defun day07-1 () (assert (= 352997 (count-moves (input)))))
+(defun same (n) n)
 
-(defun day07-2 () (assert (= 101571302 (count-moves-alg (input)))))
+(defun day07-1 () (assert (= 352997 (count-moves (input) #'same))))
+
+(defun day07-2 () (assert (= 101571302 (count-moves (input) #'alg-sum))))
 
 (defun input ()
   '(
