@@ -40,6 +40,7 @@
   (assert (= 6005
              (count-more-than-one
               (mark (filter-out-diagonal (input)) (new-hash))))))
+
 (defun day05-2 ()
   (assert (= 23864
              (count-more-than-one
