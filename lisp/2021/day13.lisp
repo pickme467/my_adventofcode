@@ -38,9 +38,17 @@
 
 (defun day13-1 () (assert (= 621 (length (apply-fold (car (instructions)) (input))))))
 
-(defun day13-2 () (assert (string-equal
-                           "#  # #  # #  #   ##  ##   ##    ## ####  ~%#  # # #  #  #    # #  # #  #    #    #  ~%#### ##   #  #    # #    #  #    #   #   ~%#  # # #  #  #    # # ## ####    #  #    ~%#  # # #  #  # #  # #  # #  # #  # #     ~%#  # #  #  ##   ##   ### #  #  ##  ####  ~% "
-                           (apply #'concatenate 'string(display (make-all-folds (instructions) (input)))))))
+(defun day13-2 () (assert
+                   (string-equal
+                    (format nil "~
+#  # #  # #  #   ##  ##   ##    ## ####  ~~%~
+#  # # #  #  #    # #  # #  #    #    #  ~~%~
+#### ##   #  #    # #    #  #    #   #   ~~%~
+#  # # #  #  #    # # ## ####    #  #    ~~%~
+#  # # #  #  # #  # #  # #  # #  # #     ~~%~
+#  # #  #  ##   ##   ### #  #  ##  ####  ~~% ")
+                    (apply #'concatenate
+                           'string (display (make-all-folds (instructions) (input)))))))
 
 (defun example ()
   '((6 10)
