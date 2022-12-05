@@ -26,17 +26,6 @@
 (defun day05-part2 ()
   (assert (equal '(T P W C G N C C G) (rearrange-straight (stacks) (input)))))
 
-(defun test-stacks ()
-  '((1 N Z)
-    (2 D C M)
-    (3 P)))
-
-(defun test-input ()
-  '((move 1 from 2 to 1)
-    (move 3 from 1 to 3)
-    (move 2 from 2 to 1)
-    (move 1 from 1 to 2)))
-
 (defun stacks ()
   '((1 . (P G R N))
     (2 . (C D G F L B T J))
