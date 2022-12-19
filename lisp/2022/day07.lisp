@@ -11,29 +11,25 @@
         with action = 'none
         with hash = (newhash)
         for (dollar-dir-size command-name argument-nil) in input
-        when (and (equal dollar-dir-size '$)
-                  (equal command-name 'cd)
+        when (and (equal command-name 'cd)
                   (equal argument-nil '\.\.))
           do (pop current)
              (setf action 'cd)
         end
-        when (and (equal dollar-dir-size '$)
-                  (equal command-name 'cd)
+        when (and (equal command-name 'cd)
                   (not (equal argument-nil '\.\.)))
           do (push argument-nil current)
              (setf action 'cd)
         end
-        when (and (equal dollar-dir-size '$)
-                  (equal command-name 'ls))
+        when (and (equal command-name 'ls))
           do (setf action 'ls)
         end
-        when (and (not (equal dollar-dir-size '$))
-                  (equal action 'ls)
+        when (and (equal action 'ls)
                   (equal dollar-dir-size 'dir))
           do (update-hash current (list command-name) hash)
         end
-        when (and (not (equal dollar-dir-size '$))
-                  (equal action 'ls)
+        when (and (equal action 'ls)
+                  (not (equal dollar-dir-size '$))
                   (not (equal dollar-dir-size 'dir)))
           do (update-hash current (list command-name dollar-dir-size) hash)
         finally (return hash)))

@@ -7,7 +7,7 @@
            (new-to-stack (concatenate 'list to-move to-stack)))
       (rplacd (assoc stack-from stacks) remainder)
       (rplacd (assoc stack-to stacks) new-to-stack))
-    finally (return (loop for i from 1 to 9 collecting (cadr (assoc i stacks))))))
+    finally (return (loop for i from 1 to (length stacks) collecting (cadr (assoc i stacks))))))
 
 (defun rearrange-straight (stacks input)
   (loop for (move number from stack-from to stack-to) in input do
@@ -18,7 +18,7 @@
            (new-to-stack (concatenate 'list to-move to-stack)))
       (rplacd (assoc stack-from stacks) remainder)
       (rplacd (assoc stack-to stacks) new-to-stack))
-    finally (return (loop for i from 1 to 9 collecting (cadr (assoc i stacks))))))
+    finally (return (loop for i from 1 to (length stacks) collecting (cadr (assoc i stacks))))))
 
 (defun day05-part1 ()
   (assert (equal '(V P C D M S L W J) (rearrange (stacks) (input)))))
@@ -27,15 +27,17 @@
   (assert (equal '(T P W C G N C C G) (rearrange-straight (stacks) (input)))))
 
 (defun stacks ()
-  '((1 . (P G R N))
-    (2 . (C D G F L B T J))
-    (3 . (V S M))
-    (4 . (P Z C R S L))
-    (5 . (Q D W C V L S P))
-    (6 . (S M D W N T C))
-    (7 . (P W G D H))
-    (8 . (V M C S H P L Z))
-    (9 . (Z G W L F P R))))
+  (loop for i in '((1 . (P G R N))
+                   (2 . (C D G F L B T J))
+                   (3 . (V S M))
+                   (4 . (P Z C R S L))
+                   (5 . (Q D W C V L S P))
+                   (6 . (S M D W N T C))
+                   (7 . (P W G D H))
+                   (8 . (V M C S H P L Z))
+                   (9 . (Z G W L F P R)))
+        collect (copy-list i) into copy
+        finally (return copy)))
 
 (defun input ()
   '(
