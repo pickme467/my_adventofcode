@@ -2,3 +2,4 @@
 rebar.lock
 mix.lock
 *.fasl
+*.pyc
